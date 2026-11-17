@@ -78,3 +78,9 @@
 @media(max-width:1320px){.mod-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mod-summary-card:last-child{grid-column:span 2}.mod-secondary{flex-wrap:wrap}}
 @media(max-width:870px){.mod-summary-grid{grid-template-columns:1fr}.mod-summary-card:last-child{grid-column:span 1}.mod-form .form-grid{grid-template-columns:1fr}.mod-secondary{align-items:flex-start}.mod-section-header{display:block}.mod-section-header .btn{margin-top:12px}}
 @media(max-width:550px){.mod-report-panel{padding:16px}.mod-week>span{font-size:9px}.mod-weeks{gap:5px}.mod-event{padding:12px;gap:12px}.mod-event-day{width:42px;height:48px}.mod-event-day strong{font-size:19px}.mod-secondary{padding:15px;display:block}.mod-secondary>*+*{margin-top:10px}.mod-card-title{flex-wrap:wrap}.mod-card-title .micro-link{width:100%;justify-content:flex-start}.sidebar{height:100dvh}}
+
+/* Additional administrative workflows for the new tracking modules */
+.mod-admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;align-items:start}
+.mod-admin-label{font-size:10px;letter-spacing:.09em;font-weight:800;color:#88bdaa;margin:16px 0 10px}
+.mod-admin-grid .code-panel{font-size:10px}
+@media(max-width:1100px){.mod-admin-grid{grid-template-columns:1fr}}
