@@ -4,7 +4,8 @@
 var PLAN=window.SKWS_MENTOR_GROUPS||{groups:[],aliases:{}};
 var SNAP=window.SKWS_SNAPSHOT||{members:[],entries:[]};
 var API=window.SKWS_BACKEND||null;
-var VIEWS={overview:'DASHBOARD',groups:'MENTORENGRUPPEN',members:'MITGLIEDER',entry:'TRUPPEN MELDEN',admin:'FREIGABEN',system:'SYSTEMSTATUS'};
+var VIEWS={overview:'DASHBOARD',groups:'MENTORENGRUPPEN',members:'MITGLIEDER',entry:'TRUPPEN MELDEN',vs:'VS-PUNKTE',donations:'SPENDEN',storms:'STÜRME',shields:'SCHILDE',train:'ZUG',events:'EVENTS',seasons:'SAISONS',compare:'VERGLEICH',kills:'KILL-TRACKER',custom:'EIGENE EVENTS',admin:'FREIGABEN',system:'SYSTEMSTATUS'};
+var MOD=window.SKWS_MODULES||null;
 var TYPE_LABELS={tank:'Tank',aircraft:'Flugzeug',missile:'Rakete',mixed:'Gemischt'};
 var TYPE_KEYS=Object.keys(TYPE_LABELS);
 var state={view:'overview',members:[],source:'snapshot',loading:true,error:null,syncedAt:null,search:'',groupFilter:'all',statusFilter:'all',sort:'sort',selectedName:'',busy:false};
@@ -91,7 +92,7 @@ function dashboard(){
  overviewStrip()+
  '<div class="metrics">'+metric('Mitglieder',formatNumber(s.members,0),'In der unabhängigen Datenbank','users','blue')+metric('T1 gemeldet',formatNumber(s.reported,0),'Von '+s.members+' Mitgliedern','check','')+metric('T1-Gesamtkraft',power(s.power),'Summe der gemeldeten T1','activity','amber')+metric('Mentorengruppen',String(s.groups),'78 Spieler · 11 Mentoren · 5 R4','groups','violet')+'</div>'+
  spotlight+panels+
- '<section class="panel table-panel"><div class="table-panel-header"><div><h2>Zuletzt aktualisierte Truppen</h2><small>Nur vorhandene, bestätigte T1-Meldungen</small></div><button class="micro-link" data-view="members">Alle Mitglieder '+ico('arrow')+'</button></div>'+tableHTML(recent)+'</section>';
+ '<section class="panel table-panel"><div class="table-panel-header"><div><h2>Zuletzt aktualisierte Truppen</h2><small>Nur vorhandene, bestätigte T1-Meldungen</small></div><button class="micro-link" data-view="members">Alle Mitglieder '+ico('arrow')+'</button></div>'+tableHTML(recent)+'</section>'+(MOD?MOD.dashboardAddon(state.members):'');
 }
 function groupPerson(name,g,role){
  var p=findMember(alias(name)),isKnown=p&&p.origin!=='group_plan';
@@ -194,7 +195,8 @@ function render(){
  document.getElementById('place').textContent=VIEWS[state.view]||'DASHBOARD';
  document.querySelectorAll('.nav-link').forEach(function(el){var active=el.dataset.view===state.view;el.classList.toggle('active',active);if(active)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
  var views={overview:dashboard,groups:groupsView,members:membersView,entry:entryView,admin:adminView,system:systemView};
- container.innerHTML=(views[state.view]||dashboard)();
+ var extension=MOD?MOD.render(state.view,state.members):null;
+ container.innerHTML=extension===null?(views[state.view]||dashboard)():extension;
 }
 function closeMobile(){var side=document.getElementById('sidebar'),shade=document.getElementById('mobileShade');side.classList.remove('open');shade.hidden=true;}
 function openMobile(){var side=document.getElementById('sidebar'),shade=document.getElementById('mobileShade');side.classList.add('open');shade.hidden=false;}
@@ -202,7 +204,7 @@ function navigate(view){if(!VIEWS[view])return;state.view=view;closeMobile();ren
 var toastTimer=null;
 function toast(msg){toastNode.textContent=msg;toastNode.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastNode.classList.remove('show');},4500);}
 async function refresh(manual){
- if(!API){state.source='snapshot';state.loading=false;state.error='Backend nicht geladen';render();return;}
+ if(!API){state.source='snapshot';state.loading=false;state.error='Backend nicht geladen';if(MOD)MOD.setError(new Error('Backend nicht geladen'));render();return;}
  state.loading=true;
  try{
   var data=await API.load();
@@ -211,6 +213,13 @@ async function refresh(manual){
  }catch(err){
   state.loading=false;state.source='snapshot';state.error=err&&err.message||'Verbindung fehlgeschlagen';state.members=snapshotMembers();
   if(manual)toast('Online-Daten nicht erreichbar. Es wird die Reservekopie angezeigt.');
+ }
+ if(MOD){
+  try{
+   if(!API.loadTracking)throw Error('Tracking-Schnittstelle fehlt');
+   var tracking=await API.loadTracking();
+   MOD.setData(tracking);
+  }catch(trackingErr){MOD.setError(trackingErr);}
  }
  render();
 }
@@ -280,9 +289,10 @@ document.addEventListener('change',function(e){
  if(target.id==='rosterSort'){state.sort=target.value;document.getElementById('rosterTable').innerHTML=rosterTable();}
  if(target.id==='playerSelect'){state.selectedName=target.value;render();}
 });
-document.addEventListener('submit',function(e){if(e.target.id==='squadForm'){e.preventDefault();submitForm(e.target);}});
+document.addEventListener('submit',function(e){if(e.target.id==='squadForm'){e.preventDefault();submitForm(e.target);}else if(MOD){MOD.handleSubmit(e);}});
 window.addEventListener('keydown',function(e){if(e.key==='Escape')closeMobile();});
 state.members=snapshotMembers();
+if(MOD)MOD.setHost({toast:toast,refresh:function(){refresh(true);}});
 render();
 refresh(false);
 })();
