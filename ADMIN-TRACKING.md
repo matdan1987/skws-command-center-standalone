@@ -115,14 +115,16 @@ Auch hier sind Werte nur Platzhalter; eine unbekannte Punktzahl bleibt NULL. 0 P
 
 ### Gesamtstatistik: Mindestanforderungen und Gewichtung
 
-Die neue Ansicht Gesamtstatistik berücksichtigt individuell dokumentierte VS-Tageswerte, Allianzspenden und echte Wüstensturm-Teilnahme. Für eine belastbare Highlight-/Lowlight-Einordnung sind Daten aus **mindestens zwei Bereichen** erforderlich und mindestens 3 abgeschlossene VS- oder Spendentage (einstellbar). Fehlende Meldungen sind **keine** Nullwerte. Nicht nominierte Spieler erhalten keinen Wüstensturm-Abzug.
+Die neue Ansicht Gesamtstatistik berücksichtigt individuell dokumentierte VS-Tageswerte, Allianzspenden, echte Wüstensturm-Teilnahme **und die dokumentierte T1-Kampfkraft**. Für eine belastbare Highlight-/Lowlight-Einordnung sind Daten aus **mindestens zwei Aktivitätsbereichen (VS, Spenden, Wüstensturm)** erforderlich und mindestens 3 abgeschlossene VS- oder Spendentage (einstellbar). Fehlende Meldungen sind **keine** Nullwerte. Nicht nominierte Spieler erhalten keinen Wüstensturm-Abzug.
 
 Startwerte, ausdrücklich **nicht von der Allianzleitung bestätigte Pflichten**:
 
 - VS: Tagesziel laut konfigurierter Eco-/Eco-Plus-/All-In-Woche, standardmäßig 7,2 Mio.
 - Spenden: 5.000 Punkte pro erfasstem Tag als veränderbarer Vorschlagswert
 - Wüstensturm: Teilnahme zählt mit; 10.000 individuelle Punkte sind eine anpassbare Vergleichsmarke **nur nach verifizierter Teilnahme**
-- Gewichtung: VS 50 %, Spenden 30 %, Wüstensturm 20 %; nur Kategorien mit tatsächlichen Daten werden in den Index eingerechnet
+- Gewichtung: VS 40 %, Spenden 25 %, Wüstensturm 20 %, **T1-Kampfkraft 15 %**; nur Kategorien mit tatsächlich vorhandenen Daten werden in den Index eingerechnet
+- Kampfkraft: Aktuell gemeldeter T1-Wert in Millionen im Verhältnis zum 90. Perzentil der bekannten SKWS-T1-Werte. Maximal 100 Punkte für die Teilkategorie. T2 bis T4 werden als zusätzlicher Überblick gezeigt, fließen nicht in die Gewichtung ein.
+- Historische Auswertungen: Kein rückwirkender T1-Kraftindex für vergangene Wochen, weil bisher keine datierten Kampfkraft-Snapshots archiviert sind. Angezeigte Kampfkraft ist die aktuell gemeldete, nicht die historische Stärke.
 - Highlights: Index ab 85, Lowlights: bis 55, **nur** bei ausreichender geprüfter Datengrundlage
 - Zwischenstände: nur unverbindliche Trends, Eco-Abweichungen und Prüfhinweise; keine endgültigen Lowlights
 
@@ -134,16 +136,17 @@ SET min_daily_donations=5000,
     min_storm_individual_points=10000,
     min_final_vs_days=3,
     min_final_donation_days=3,
-    weight_vs=50,
-    weight_donations=30,
+    weight_vs=40,
+    weight_donations=25,
     weight_storm=20,
+    weight_power=15,
     highlight_score=85,
     lowlight_score=55,
     updated_at=now()
 WHERE id=1;
 \`\`\`
 
-Summe der drei Gewichte muss 100 sein. Eine Änderung wirkt sich auf die aktuelle Anzeige aus, ohne die Originalmeldungen zu verändern. Die Gesamtstatistik ist **keine automatische Strafe**, sondern ein transparentes Instrument für Mentoren und R4/R5.
+Summe der vier Gewichte muss 100 sein. Ein fehlender T1-Meldewert wird **nicht mit null** bewertet. Der Wert allein zählt nicht als Aktivitätsnachweis. Eine Änderung wirkt sich auf die aktuelle Anzeige aus, ohne die Originalmeldungen zu verändern. Die Gesamtstatistik ist **keine automatische Strafe**, sondern ein transparentes Instrument für Mentoren und R4/R5.
 
 
 ## Schildmeldungen
