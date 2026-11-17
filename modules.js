@@ -1,7 +1,7 @@
 /* SKWS/FarmOps-inspired operational modules. All data are real, moderated and stored only in standalone Supabase. */
 (function(){
 'use strict';
-var DATA={metrics:[],shields:[],events:[],seasons:[]}, READY=false,ERROR='',host={toast:function(){},refresh:function(){}};
+var DATA={metrics:[],shields:[],events:[],seasons:[],vsStrategies:[]}, READY=false,ERROR='',VS_WEEK_VIEW='',host={toast:function(){},refresh:function(){},rerender:function(){}};
 var CATS={
  vs:{title:'VS-Punkte',name:'VS-Duelle',metric:'vs_points',unit:'Punkte',icon:'swords',subtitle:'Wöchentliche VS-Leistung, Beteiligung und Gruppenvergleich',target:'vs'},
  donations:{title:'Spenden',name:'Allianzspenden',metric:'donations',unit:'Spendenpunkte',icon:'chart',subtitle:'Spenden je Spieler, Woche und Mentorengruppe',target:'donations'},
@@ -44,10 +44,97 @@ function metricRows(metric,members,start){
  rows.forEach(function(r){var name=r.member_name;byPerson[name]=(byPerson[name]||0)+Number(r.metric_value);});
  return Object.keys(byPerson).map(function(name){var p=members.find(function(m){return m.name===name;});return {name:name,display:p?p.display:name,group:p?p.group:0,value:byPerson[name]};}).sort(function(a,b){return b.value-a.value||a.display.localeCompare(b.display,'de');});
 }
+
+/* Weekly strategies are admin-managed in Supabase; analysis is read-only. */
+var VS_DAYS=[
+ ['Mo','Radartraining'],['Di','Basisausbau'],['Mi','Forschung'],
+ ['Do','Helden'],['Fr','Mobilisierung'],['Sa','Enemy Buster']
+];
+function vsConfig(week){
+ return (DATA.vsStrategies||[]).find(function(x){return x.week_start===week;})||null;
+}
+function vsModeName(mode){return ({eco:'Eco',eco_plus:'Eco Plus',all_in:'All In'})[mode]||'Nicht festgelegt';}
+function vsWeeks(){
+ var set=new Set([currentWeek()]);
+ (DATA.vsStrategies||[]).forEach(function(x){if(/^\d{4}-\d{2}-\d{2}$/.test(x.week_start))set.add(x.week_start);});
+ (DATA.metrics||[]).forEach(function(x){if(x.metric==='vs_points'&&/^\d{4}-\d{2}-\d{2}$/.test(x.recorded_on))set.add(weekStart(new Date(x.recorded_on+'T12:00:00')));});
+ if(VS_WEEK_VIEW)set.add(VS_WEEK_VIEW);
+ return Array.from(set).sort().reverse();
+}
+function vsWeekPicker(selected){
+ return '<label class="vs-week-picker"><span>VS-WOCHE</span><select id="vsWeekPicker" aria-label="VS-Woche auswählen">'+
+  vsWeeks().map(function(w){return '<option value="'+escape(w)+'"'+(w===selected?' selected':'')+'>'+escape(prettyDate(w))+' – '+escape(prettyDate(addDays(w,5)))+'</option>';}).join('')+
+  '</select></label>';
+}
+function vsDayRows(week,index){
+ var date=addDays(week,index);
+ return forMetric('vs_points',week).filter(function(r){return r.recorded_on===date;});
+}
+function vsMemberExcess(name,week,target){
+ var rows=forMetric('vs_points',week).filter(function(r){return r.member_name===name;});
+ var extra=rows.reduce(function(sum,r){return sum+Math.max(0,Number(r.metric_value||0)-target);},0);
+ var days=rows.filter(function(r){return Number(r.metric_value)>target;}).length;
+ return {extra:extra,days:days};
+}
+function vsStrategyPanel(week){
+ var cfg=vsConfig(week);
+ if(!cfg)return '<section class="panel vs-strategy-panel"><div class="panel-heading"><div><h2>VS-Wochenstrategie</h2><p class="muted">Für diese Woche ist noch keine Eco-, Eco-Plus- oder All-In-Strategie hinterlegt.</p></div></div>'+
+ '<p class="muted">Ohne explizite Strategie werden keine Überschreitungen negativ bewertet.</p></section>';
+ var goal=Number(cfg.daily_target_points),rows=forMetric('vs_points',week),
+   exceeds=rows.filter(function(r){return Number(r.metric_value)>goal;}),
+   overPoints=exceeds.reduce(function(sum,r){return sum+(Number(r.metric_value)-goal);},0),
+   full=rows.filter(function(r){return Number(r.metric_value)>=goal;}).length,
+   provisional=rows.some(function(r){return /zwischenstand/i.test(r.notes||'');}),
+   negative=cfg.mode==='eco',
+   modeClass=negative?'vs-mode-eco':cfg.mode==='eco_plus'?'vs-mode-plus':'vs-mode-all',
+   days=VS_DAYS.map(function(day,i){
+    var records=vsDayRows(week,i),over=records.filter(function(r){return Number(r.metric_value)>goal;}),
+      amount=over.reduce(function(sum,r){return sum+Number(r.metric_value)-goal;},0),
+      count=records.filter(function(r){return Number(r.metric_value)>=goal;}).length,
+      status=!records.length?'<span class="vs-pill vs-pill-neutral">Keine Meldungen</span>':
+        (cfg.mode==='eco'&&over.length?'<span class="vs-pill vs-pill-negative">'+over.length+' über Ziel</span>':
+        cfg.mode==='eco_plus'&&over.length?'<span class="vs-pill vs-pill-review">'+over.length+' prüfen</span>':
+        '<span class="vs-pill vs-pill-good">'+(cfg.mode==='all_in'?'Offensiv':'Im Rahmen')+'</span>');
+    return '<tr><td><strong>'+day[0]+'</strong> <small class="vs-day-theme">'+escape(day[1])+'</small></td>'+
+      '<td class="num">'+(records.length?records.length:'–')+'</td>'+
+      '<td class="num">'+(records.length?count:'–')+'</td>'+
+      '<td class="num">'+(records.length?over.length:'–')+'</td>'+
+      '<td class="num '+(negative&&amount?'vs-negative':'')+'">'+(records.length?'+'+nums(amount,0):'–')+'</td>'+
+      '<td>'+status+'</td></tr>';
+   }).join('');
+ return '<section class="panel vs-strategy-panel">'+
+ '<div class="panel-heading"><div><div class="vs-eyebrow">ALLIANZ-VORGABE · '+escape(prettyDate(week))+' BIS '+escape(prettyDate(addDays(week,5)))+'</div>'+
+ '<h2>Strategie: <span class="vs-mode '+modeClass+'">'+escape(vsModeName(cfg.mode))+'</span></h2>'+
+ '<p class="muted">'+(negative?'7,2-Mio.-Prinzip: Jeder Punkt über dem Tageslimit wird als Eco-Abweichung markiert.':
+ cfg.mode==='eco_plus'?'Truhen sichern und nur die für einen Tagessieg nötigen Zusatzpunkte einsetzen. Ohne Gegnerdaten kein automatischer Malus.':
+ 'Keine Eco-Strafe: Jeder zusätzliche VS-Punkt zählt regulär.')+'</p></div></div>'+
+ '<div class="vs-summary">'+
+ '<div><span>Truhenziel / Tag</span><strong>'+nums(goal,0)+'</strong></div>'+
+ '<div><span>Erfasste Tageswerte</span><strong>'+rows.length+'</strong></div>'+
+ '<div><span>Truhenziel erreicht</span><strong>'+full+'</strong></div>'+
+ '<div><span>'+(negative?'Eco-Abweichungen':'Tageswerte über Ziel')+'</span><strong class="'+(negative&&exceeds.length?'vs-negative':'')+'">'+exceeds.length+'</strong></div>'+
+ '<div><span>'+(negative?'Überschuss (negativ)':'Punkte über Ziel')+'</span><strong class="'+(negative&&overPoints?'vs-negative':'')+'">+'+nums(overPoints,0)+'</strong></div></div>'+
+ '<div class="table-scroll"><table class="vs-days-table"><thead><tr><th>Tag</th><th>Meldungen</th><th>Truhenziel</th><th>Über Ziel</th><th>Zusatzpunkte</th><th>Strategie</th></tr></thead><tbody>'+days+'</tbody></table></div>'+
+ '<p class="vs-explainer">'+(provisional?'Diese Zahlen enthalten Zwischenstände und sind noch keine Tages-Endergebnisse. ':'')+
+ 'Bewertung pro Spieler und Tag, Montag bis Samstag. Überschuss ist eine Strategieabweichung, kein automatisch belegter Ressourcenverlust. '+
+ 'Sonntag ist Vorbereitungstag. Die Tagesaufgaben können je nach Spielversion abweichen.</p></section>';
+}
+function vsExtraCell(row,week,cfg){
+ if(!cfg)return '';
+ var total=vsMemberExcess(row.name,week,Number(cfg.daily_target_points));
+ if(!total.extra)return '<td><span class="vs-pill vs-pill-neutral">Kein Überschuss</span></td>';
+ var negative=cfg.mode==='eco',clazz=negative?'vs-pill-negative':cfg.mode==='eco_plus'?'vs-pill-review':'vs-pill-good',
+   word=negative?'Eco-Malus':cfg.mode==='eco_plus'?'Prüfen':'All In';
+ return '<td><span class="vs-pill '+clazz+'">'+word+': +'+nums(total.extra,0)+'</span> <small class="vs-day-count">'+total.days+' Tag'+(total.days===1?'':'e')+'</small></td>';
+}
+
 function metricTable(metric,members,start){
  var rows=metricRows(metric,members,start);
  if(!rows.length)return noRecords('Noch keine bestätigten Meldungen','Reiche den ersten Wert ein. Nach Freigabe erscheint die Rangliste.');
- return '<div class="table-scroll"><table><thead><tr><th>Platz</th><th>Spieler</th><th>Gruppe</th><th>Wochenwert</th></tr></thead><tbody>'+rows.map(function(r,i){return '<tr><td><b class="num">'+(i+1)+'.</b></td><td><strong>'+escape(r.display)+'</strong></td><td>'+(r.group?'G'+r.group:'–')+'</td><td class="num">'+escape(compact(r.value))+'</td></tr>';}).join('')+'</tbody></table></div>';
+ var strategy=metric==='vs_points'?vsConfig(start):null;
+ return '<div class="table-scroll"><table><thead><tr><th>Platz</th><th>Spieler</th><th>Gruppe</th><th>Wochenwert</th>'+(strategy?'<th>Strategie-Auswertung</th>':'')+'</tr></thead><tbody>'+
+ rows.map(function(r,i){return '<tr><td><b class="num">'+(i+1)+'.</b></td><td><strong>'+escape(r.display)+'</strong></td><td>'+(r.group?'G'+r.group:'–')+'</td>'+
+ '<td class="num">'+escape(metric==='vs_points'?nums(r.value,0):compact(r.value))+'</td>'+(strategy?vsExtraCell(r,start,strategy):'')+'</tr>';}).join('')+'</tbody></table></div>';
 }
 function groupTable(metric,members,start){
  var rows=metricRows(metric,members,start);var values=[1,2,3,4,5].map(function(g){return {group:g,value:rows.filter(function(r){return r.group===g;}).reduce(function(a,r){return a+r.value;},0)};});
@@ -66,17 +153,17 @@ function metricReportForm(cat,members){
 }
 function metricPage(key,members){
  var cfg=CATS[key];if(!cfg)return '';
- var wk=currentWeek(),prev=previousWeek(),current=totals(cfg.metric,wk),last=totals(cfg.metric,prev);
+ var wk=key==='vs'?(VS_WEEK_VIEW||currentWeek()):currentWeek(),prev=key==='vs'?addDays(wk,-7):previousWeek(),current=totals(cfg.metric,wk),last=totals(cfg.metric,prev);
  var change=last.sum>0?nums((current.sum-last.sum)/last.sum*100,1)+' % gegenüber Vorwoche':'Keine Vorwochen-Daten';
  var history=[0,1,2,3].map(function(i){var w=addDays(wk,-7*(3-i)),r=totals(cfg.metric,w);return {week:w,sum:r.sum};});var max=Math.max(0,...history.map(function(r){return r.sum;}));
  var bars='<div class="mod-weeks">'+history.map(function(r){return '<div class="mod-week"><span>'+escape(prettyDate(r.week))+'</span><div class="mod-weekbar"><div style="height:'+(max?Math.max(2,Math.round(100*r.sum/max)):0)+'%"></div></div><b>'+escape(r.sum?compact(r.sum):'–')+'</b></div>';}).join('')+'</div>';
  var panel='<div class="dashboard-grid"><section class="panel"><div class="panel-heading"><div><h2>Gruppenvergleich</h2><div class="description">Bestätigte Werte in dieser Woche</div></div></div>'+groupTable(cfg.metric,members,wk)+'</section>'+
  '<section class="panel"><div class="panel-heading"><div><h2>Vierwochen-Trend</h2><div class="description">Tagesmeldungen summiert pro Kalenderwoche</div></div></div>'+bars+'</section></div>';
- return header('ALLIANCE / TRACKING',cfg.name,cfg.subtitle,btn('Vergleich öffnen','compare'))+statusText()+(forMetric(cfg.metric,wk).some(function(r){return /Zwischenstand/i.test(r.notes||'');}) ? hint(cfg.metric==='donations' ? '<strong>Vorläufiger Spenden-Tagesstand (16.11.2026):</strong> Die 97 Werte stammen aus der täglichen Last-War-Rangliste. Die angezeigte Wochensumme enthält derzeit nur gemeldete Tageswerte und ist weder das abgeschlossene Wochen- noch das Endergebnis.' : '<strong>Vorläufiger VS-Zwischenstand:</strong> Die eingetragenen Punkte stammen aus den Last-War-Screenshots und sind ausdrücklich noch kein Endergebnis. Die Werte werden nach dem offiziellen Abschluss aktualisiert.') : '')+
- '<div class="metrics">'+metricsCard('Diese Woche',current.rows.length?compact(current.sum):'–','Woche '+weekLabel(wk),'chart')+
+ return header('ALLIANCE / TRACKING',cfg.name,cfg.subtitle,(key==='vs'?vsWeekPicker(wk):'')+btn('Vergleich öffnen','compare'))+statusText()+(forMetric(cfg.metric,wk).some(function(r){return /Zwischenstand/i.test(r.notes||'');}) ? hint(cfg.metric==='donations' ? '<strong>Vorläufiger Spenden-Tagesstand (16.11.2026):</strong> Die 97 Werte stammen aus der täglichen Last-War-Rangliste. Die angezeigte Wochensumme enthält derzeit nur gemeldete Tageswerte und ist weder das abgeschlossene Wochen- noch das Endergebnis.' : '<strong>Vorläufiger VS-Zwischenstand:</strong> Die eingetragenen Punkte stammen aus den Last-War-Screenshots und sind ausdrücklich noch kein Endergebnis. Die Werte werden nach dem offiziellen Abschluss aktualisiert.') : '')+
+ '<div class="metrics">'+metricsCard(key==='vs'?'Ausgewählte VS-Woche':'Diese Woche',current.rows.length?compact(current.sum):'–','Woche '+(key==='vs'?prettyDate(wk)+' – '+prettyDate(addDays(wk,5)):weekLabel(wk)),'chart')+
  metricsCard('Aktive Melder',current.rows.length?String(current.count):'–','Spieler mit freigegebenen Werten','users')+
  metricsCard('Vorwoche',last.rows.length?compact(last.sum):'–','Woche '+weekLabel(prev),'clock')+
- metricsCard('Entwicklung',last.rows.length&&current.rows.length?change:'–','Ohne Meldungen keine belastbare Quote','activity')+'</div>'+panel+
+ metricsCard('Entwicklung',last.rows.length&&current.rows.length?change:'–','Ohne Meldungen keine belastbare Quote','activity')+'</div>'+(key==='vs'?vsStrategyPanel(wk):'')+panel+
  '<section class="panel table-panel"><div class="table-panel-header"><div><h2>Spieler-Rangliste</h2><small>'+escape(weekLabel(wk))+'</small></div></div>'+metricTable(cfg.metric,members,wk)+'</section>'+
  '<div style="height:22px"></div>'+metricReportForm(cfg,members);
 }
@@ -229,7 +316,8 @@ async function send(event){
 }
 window.SKWS_MODULES={
  setHost:function(x){host=x;},
- setData:function(data){DATA=data||{metrics:[],shields:[],events:[],seasons:[]};READY=true;ERROR='';},
+ setData:function(data){DATA=data||{metrics:[],shields:[],events:[],seasons:[],vsStrategies:[]};if(!Array.isArray(DATA.vsStrategies))DATA.vsStrategies=[];READY=true;ERROR='';},
+ setVsWeek:function(week){VS_WEEK_VIEW=/^\d{4}-\d{2}-\d{2}$/.test(week)?week:'';host.rerender();},
  setError:function(err){READY=false;ERROR=err&&err.message||'Tracking nicht verfügbar';},
  render:render,
  dashboardAddon:dashboardAddon,
