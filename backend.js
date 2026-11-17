@@ -47,7 +47,7 @@ window.SKWS_BACKEND={
    request('cc_vs_week_strategies?select=week_start,mode,daily_target_points,notes&order=week_start.desc&limit=40'),
    request('cc_desert_storm_matches?select=id,event_date,team,starts_at,opponent,result,own_points,enemy_points,notes&order=event_date.desc&limit=150'),
    request('cc_desert_storm_roster?select=id,match_id,member_name,slot,attendance,individual_points,notes&limit=1000'),
-   request('cc_activity_rules?select=id,min_daily_donations,min_storm_individual_points,min_final_vs_days,min_final_donation_days,weight_vs,weight_donations,weight_storm,highlight_score,lowlight_score,notes&limit=1')
+   request('cc_activity_rules?select=id,min_daily_donations,min_storm_individual_points,min_final_vs_days,min_final_donation_days,weight_vs,weight_donations,weight_storm,weight_power,highlight_score,lowlight_score,notes&limit=1')
   ]);
   if(!Array.isArray(metrics)||!Array.isArray(shields)||!Array.isArray(events)||!Array.isArray(seasons)||!Array.isArray(vsStrategies)||!Array.isArray(stormMatches)||!Array.isArray(stormRoster)||!Array.isArray(activityRules))throw new Error('Tracking-Daten nicht lesbar');
   return {metrics:metrics,shields:shields,events:events,seasons:seasons,vsStrategies:vsStrategies,stormMatches:stormMatches,stormRoster:stormRoster,activityRules:activityRules};
