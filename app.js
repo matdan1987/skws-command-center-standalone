@@ -4,7 +4,7 @@
 var PLAN=window.SKWS_MENTOR_GROUPS||{groups:[],aliases:{}};
 var SNAP=window.SKWS_SNAPSHOT||{members:[],entries:[]};
 var API=window.SKWS_BACKEND||null;
-var VIEWS={overview:'DASHBOARD',groups:'MENTORENGRUPPEN',members:'MITGLIEDER',entry:'TRUPPEN MELDEN',vs:'VS-PUNKTE',donations:'SPENDEN',storms:'STÜRME',shields:'SCHILDE',train:'ZUG',events:'EVENTS',seasons:'SAISONS',compare:'VERGLEICH',kills:'KILL-TRACKER',custom:'EIGENE EVENTS',admin:'FREIGABEN',system:'SYSTEMSTATUS'};
+var VIEWS={overview:'DASHBOARD',groups:'MENTORENGRUPPEN',members:'MITGLIEDER',entry:'TRUPPEN MELDEN',vs:'VS-PUNKTE',donations:'SPENDEN',storms:'WÜSTENSTURM',impact:'GESAMTSTATISTIK',shields:'SCHILDE',train:'ZUG',events:'EVENTS',seasons:'SAISONS',compare:'VERGLEICH',kills:'KILL-TRACKER',custom:'EIGENE EVENTS',admin:'FREIGABEN',system:'SYSTEMSTATUS'};
 var MOD=window.SKWS_MODULES||null;
 var TYPE_LABELS={tank:'Tank',aircraft:'Flugzeug',missile:'Rakete',mixed:'Gemischt'};
 var TYPE_KEYS=Object.keys(TYPE_LABELS);
@@ -294,6 +294,7 @@ document.addEventListener('click',function(e){
  }
 });
 document.addEventListener('input',function(e){
+ if(MOD&&MOD.handleExtraInput&&MOD.handleExtraInput(e.target))return;
  if(e.target.id==='rosterSearch'){
   state.search=e.target.value;
   var el=document.getElementById('rosterTable');if(el)el.innerHTML=rosterTable();
@@ -302,6 +303,7 @@ document.addEventListener('input',function(e){
 document.addEventListener('change',function(e){
  var target=e.target;
  if(target.id==='vsWeekPicker'&&MOD&&MOD.setVsWeek){MOD.setVsWeek(target.value);return;}
+ if(MOD&&MOD.handleExtraChange&&MOD.handleExtraChange(target))return;
  if(target.id==='rosterGroup'){state.groupFilter=target.value;document.getElementById('rosterTable').innerHTML=rosterTable();}
  if(target.id==='rosterStatus'){state.statusFilter=target.value;document.getElementById('rosterTable').innerHTML=rosterTable();}
  if(target.id==='rosterSort'){state.sort=target.value;document.getElementById('rosterTable').innerHTML=rosterTable();}
