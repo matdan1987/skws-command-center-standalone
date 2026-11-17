@@ -115,3 +115,5 @@
 .vs-explainer{color:#93a8b9;font-size:11px;line-height:1.65;margin:15px 0 0}
 @media(max-width:1200px){.vs-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.vs-summary>div{border-bottom:1px solid #304158}.vs-summary>div:nth-child(3){border-right:0}.vs-summary>div:nth-last-child(-n+2){border-bottom:0}}
 @media(max-width:650px){.vs-week-picker{width:100%;justify-content:space-between}.vs-week-picker select{max-width:210px}.vs-strategy-panel{padding:16px 11px}.vs-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.vs-summary>div:nth-child(3){border-right:1px solid #304158}.vs-summary>div:nth-child(even){border-right:0}.vs-summary>div:nth-last-child(2){border-bottom:1px solid #304158}.vs-summary>div:last-child{border-bottom:0}.vs-summary strong{font-size:16px}.vs-day-theme{display:block;margin:4px 0 0}}
+
+.vs-dashboard-note{margin-top:8px;color:#ffb0b9;font-size:10px;font-weight:750;line-height:1.6}
