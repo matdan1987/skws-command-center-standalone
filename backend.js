@@ -29,14 +29,15 @@ window.SKWS_BACKEND={
  async loadTracking(){
   var since=new Date();since.setDate(since.getDate()-90);
   var from=since.toISOString().slice(0,10);
-  var [metrics,shields,events,seasons]=await Promise.all([
+  var [metrics,shields,events,seasons,vsStrategies]=await Promise.all([
    request('cc_metric_entries?select=member_name,metric,metric_value,recorded_on,notes&recorded_on=gte.'+from+'&order=recorded_on.desc&limit=1000'),
    request('cc_shields?select=member_name,shield_status,expires_at,verified_at&limit=300'),
    request('cc_events?select=id,title,category,starts_at,ends_at,description,location_note&order=starts_at.asc&limit=300'),
-   request('cc_seasons?select=id,title,phase,starts_on,ends_on,notes&order=created_at.desc&limit=30')
+   request('cc_seasons?select=id,title,phase,starts_on,ends_on,notes&order=created_at.desc&limit=30'),
+   request('cc_vs_week_strategies?select=week_start,mode,daily_target_points,notes&order=week_start.desc&limit=40')
   ]);
-  if(!Array.isArray(metrics)||!Array.isArray(shields)||!Array.isArray(events)||!Array.isArray(seasons))throw new Error('Tracking-Daten nicht lesbar');
-  return {metrics:metrics,shields:shields,events:events,seasons:seasons};
+  if(!Array.isArray(metrics)||!Array.isArray(shields)||!Array.isArray(events)||!Array.isArray(seasons)||!Array.isArray(vsStrategies))throw new Error('Tracking-Daten nicht lesbar');
+  return {metrics:metrics,shields:shields,events:events,seasons:seasons,vsStrategies:vsStrategies};
  },
  submitMetric(data){
   if(!data||!data.member_name||!['vs_points','donations','storm_score','kills','train_points'].includes(data.metric))return Promise.reject(new Error('Ungültiger Bericht'));
