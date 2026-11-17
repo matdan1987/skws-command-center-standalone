@@ -8,7 +8,7 @@ var VIEWS={overview:'DASHBOARD',groups:'MENTORENGRUPPEN',members:'MITGLIEDER',en
 var MOD=window.SKWS_MODULES||null;
 var TYPE_LABELS={tank:'Tank',aircraft:'Flugzeug',missile:'Rakete',mixed:'Gemischt'};
 var TYPE_KEYS=Object.keys(TYPE_LABELS);
-var state={view:'overview',members:[],source:'snapshot',loading:true,error:null,syncedAt:null,search:'',groupFilter:'all',statusFilter:'all',sort:'sort',selectedName:'',busy:false};
+var state={view:(VIEWS[(window.location.hash||'').slice(1)]?(window.location.hash||'').slice(1):'overview'),members:[],source:'snapshot',loading:true,error:null,syncedAt:null,search:'',groupFilter:'all',statusFilter:'all',sort:'sort',selectedName:'',busy:false};
 var root=document.getElementById('content'),toastNode=document.getElementById('toast');
 function esc(x){return String(x===null||x===undefined?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function ico(name,cls){return '<svg class="icon '+(cls||'')+'" aria-hidden="true"><use href="#ic-'+name+'"/></svg>';}
@@ -90,6 +90,7 @@ function dashboard(){
  var recent=state.members.filter(reported).sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0);}).slice(0,7);
  return pageHeader('ALLIANCE / OVERVIEW','SKWS Command Center','Skywalkers · Server 1858 · Das operative Dashboard deiner Allianz',btn('Aktualisieren','refresh','btn-ghost','refresh')+btn('Zusammenfassung teilen','share-summary','btn-ghost','copy')+gotoButton('Truppen melden','entry','btn-primary','send'))+
  overviewStrip()+
+ '<div class="analysis-quicklink"><div><strong>Highlights, Lowlights &amp; Aktivitätscheck</strong><span>Alle SKWS-Mitglieder im Vergleich, inklusive VS, Spenden und Wüstensturm Team A/B</span></div>'+gotoButton('Gesamtstatistik ansehen','impact','btn-primary','trophy')+'</div>'+
  '<div class="metrics">'+metric('Mitglieder',formatNumber(s.members,0),'In der unabhängigen Datenbank','users','blue')+metric('T1 gemeldet',formatNumber(s.reported,0),'Von '+s.members+' Mitgliedern','check','')+metric('T1-Gesamtkraft',power(s.power),'Summe der gemeldeten T1','activity','amber')+metric('Mentorengruppen',String(s.groups),'78 Spieler · 11 Mentoren · 5 R4','groups','violet')+'</div>'+
  spotlight+panels+
  '<section class="panel table-panel"><div class="table-panel-header"><div><h2>Zuletzt aktualisierte Truppen</h2><small>Nur vorhandene, bestätigte T1-Meldungen</small></div><button class="micro-link" data-view="members">Alle Mitglieder '+ico('arrow')+'</button></div>'+tableHTML(recent)+'</section>'+(MOD?MOD.dashboardAddon(state.members):'');
@@ -215,7 +216,7 @@ function render(){
 }
 function closeMobile(){var side=document.getElementById('sidebar'),shade=document.getElementById('mobileShade');side.classList.remove('open');shade.hidden=true;}
 function openMobile(){var side=document.getElementById('sidebar'),shade=document.getElementById('mobileShade');side.classList.add('open');shade.hidden=false;}
-function navigate(view){if(!VIEWS[view])return;state.view=view;closeMobile();render();window.scrollTo({top:0,behavior:'instant'});}
+function navigate(view){if(!VIEWS[view])return;state.view=view;if(window.location.hash!=='#'+view)window.location.hash=view;closeMobile();render();window.scrollTo({top:0,behavior:'instant'});}
 var toastTimer=null;
 function toast(msg){toastNode.textContent=msg;toastNode.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastNode.classList.remove('show');},4500);}
 async function refresh(manual){
@@ -311,6 +312,7 @@ document.addEventListener('change',function(e){
 });
 document.addEventListener('submit',function(e){if(e.target.id==='squadForm'){e.preventDefault();submitForm(e.target);}else if(MOD){MOD.handleSubmit(e);}});
 window.addEventListener('keydown',function(e){if(e.key==='Escape')closeMobile();});
+window.addEventListener('hashchange',function(){var view=(window.location.hash||'').slice(1);if(VIEWS[view]&&view!==state.view){state.view=view;closeMobile();render();window.scrollTo({top:0,behavior:'instant'});}});
 state.members=snapshotMembers();
 if(MOD)MOD.setHost({toast:toast,refresh:function(){refresh(true);},rerender:render});
 render();
