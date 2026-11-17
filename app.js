@@ -88,7 +88,7 @@ function dashboard(){
  var panels='<div class="dashboard-grid"><section class="panel"><div class="panel-heading"><div><h2>T1-Meldestatus nach Gruppe</h2><div class="description">Aktuelle Abdeckung der fünf Mentorengruppen</div></div><button class="micro-link" data-view="groups">Alle Gruppen '+ico('arrow')+'</button></div><div class="group-track">'+groupProgress()+'</div></section><section class="panel"><div class="panel-heading"><div><h2>Stärkste T1-Trupps</h2><div class="description">Rangfolge nach gemeldeter Kampfkraft</div></div><button class="micro-link" data-view="members">Mitglieder '+ico('arrow')+'</button></div>'+topList()+'</section></div>';
  var spotlight=first?'<div class="feature-banner"><span class="feature-icon">'+ico('trophy')+'</span><div class="feature-banner-body"><h3>Stärkster gemeldeter T1-Trupp · '+esc(first.display)+'</h3><p>'+esc(TYPE_LABELS[first.squads[0].type]||first.squads[0].type)+' · '+esc(power(first.squads[0].power))+' · Datenstand '+esc(fmtDate(first.updatedAt))+'</p></div><span class="pill">'+ico('chart')+'T1-RANGLISTE</span></div>':'';
  var recent=state.members.filter(reported).sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0);}).slice(0,7);
- return pageHeader('ALLIANCE / OVERVIEW','SKWS Command Center','Skywalkers · Server 1858 · Das operative Dashboard deiner Allianz',btn('Aktualisieren','refresh','btn-ghost','refresh')+gotoButton('Truppen melden','entry','btn-primary','send'))+
+ return pageHeader('ALLIANCE / OVERVIEW','SKWS Command Center','Skywalkers · Server 1858 · Das operative Dashboard deiner Allianz',btn('Aktualisieren','refresh','btn-ghost','refresh')+btn('Zusammenfassung teilen','share-summary','btn-ghost','copy')+gotoButton('Truppen melden','entry','btn-primary','send'))+
  overviewStrip()+
  '<div class="metrics">'+metric('Mitglieder',formatNumber(s.members,0),'In der unabhängigen Datenbank','users','blue')+metric('T1 gemeldet',formatNumber(s.reported,0),'Von '+s.members+' Mitgliedern','check','')+metric('T1-Gesamtkraft',power(s.power),'Summe der gemeldeten T1','activity','amber')+metric('Mentorengruppen',String(s.groups),'78 Spieler · 11 Mentoren · 5 R4','groups','violet')+'</div>'+
  spotlight+panels+
@@ -285,6 +285,7 @@ document.addEventListener('click',function(e){
  var button=e.target.closest('[data-action]');if(!button)return;
  switch(button.dataset.action){
   case 'refresh':refresh(true);break;
+  case 'share-summary':if(MOD&&MOD.shareSummary){var summary=MOD.shareSummary(state.members);if(navigator.share){navigator.share({title:'SKWS Wochenbericht',text:summary}).catch(function(){copyText(summary);});}else{copyText(summary);}}break;
   case 'export-csv':download('skws-command-center.csv',csvContent(),'text/csv;charset=utf-8');break;
   case 'export-json':download('skws-command-center.json',JSON.stringify({exportedAt:new Date().toISOString(),source:state.source,members:state.members},null,2),'application/json');break;
   case 'copy-list':copyText("SELECT id, name, squads, submitted_at FROM public.cc_submissions WHERE status = 'pending' ORDER BY submitted_at;");break;
