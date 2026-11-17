@@ -11,6 +11,16 @@ async function request(path,method,data){
  if(method==='POST'||res.status===204)return null;
  return await res.json();
 }
+async function loadAllMetrics(from){
+ var rows=[],page=0,chunk=1000;
+ for(;page<30;page++){
+  var next=await request('cc_metric_entries?select=member_name,metric,metric_value,recorded_on,notes&recorded_on=gte.'+from+'&order=recorded_on.desc,member_name.asc,metric.asc&limit='+chunk+'&offset='+(page*chunk));
+  if(!Array.isArray(next))throw Error('Tracking-Paginierung fehlgeschlagen');
+  rows.push(...next);
+  if(next.length<chunk)return rows;
+ }
+ throw Error('Tracking umfasst zu viele Werte; bitte Zeitraum begrenzen');
+}
 window.SKWS_BACKEND={
  project:'yptvjhqqdqrfanixqafg',
  async load(){
@@ -30,7 +40,7 @@ window.SKWS_BACKEND={
   var since=new Date();since.setDate(since.getDate()-90);
   var from=since.toISOString().slice(0,10);
   var [metrics,shields,events,seasons,vsStrategies,stormMatches,stormRoster,activityRules]=await Promise.all([
-   request('cc_metric_entries?select=member_name,metric,metric_value,recorded_on,notes&recorded_on=gte.'+from+'&order=recorded_on.desc&limit=1000'),
+   loadAllMetrics(from),
    request('cc_shields?select=member_name,shield_status,expires_at,verified_at&limit=300'),
    request('cc_events?select=id,title,category,starts_at,ends_at,description,location_note&order=starts_at.asc&limit=300'),
    request('cc_seasons?select=id,title,phase,starts_on,ends_on,notes&order=created_at.desc&limit=30'),
