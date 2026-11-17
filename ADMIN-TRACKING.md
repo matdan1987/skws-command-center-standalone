@@ -31,6 +31,32 @@ SELECT public.cc_review_metric('UUID-DER-MELDUNG', false);
 
 Die freigegebene Tagesmeldung wird in cc_metric_entries abgelegt. Eine zweite Freigabe für **denselben Spieler, dieselbe Kategorie und dasselbe Datum** ersetzt den vorherigen Tageswert, statt ihn doppelt zu zählen. Eine Kategorie pro Tag eignet sich für einen Tagesgesamtwert. Teilmeldungen innerhalb eines Tages werden nicht automatisch aufaddiert.
 
+## VS-Wochenstrategien: Eco, Eco Plus, All In
+
+Die Strategien sind in der neuen, **nur öffentlich lesbaren** Tabelle `public.cc_vs_week_strategies` abgelegt. Nur ein privilegierter Admin darf sie verändern. Die Anzeige ermittelt die Bewertung **für jeden Spieler und jeden VS-Tag von Montag bis Samstag** aus `cc_metric_entries`. Der Sonntag zählt nicht zur VS-Wertung. Es werden **keine echten Last-War-Punkte gelöscht oder abgezogen**. Die negative Kennzeichnung ist eine strategische Eco-Abweichung und kein nachweisbarer Ressourcenverlust.
+
+- **Eco:** Jeden Tag sind 7.200.000 VS-Punkte das Allianz-Ziel; jeder Punkt darüber wird als Eco-Überschuss (negativ) markiert. Unter dem Ziel bleibt neutral, gerade bei Zwischenständen.
+- **Eco Plus:** Truhenziel zuerst; Tagesgewinn nur mit dem nötigen Zusatz. Überschüsse bleiben als prüfbedürftig markiert, jedoch ohne automatische negative Wertung, solange der tatsächliche nötige Gewinnwert unbekannt ist.
+- **All In:** Keine Eco-Abweichung, maximale Punkte sind erlaubt.
+
+Für die Woche ab **Montag, 16.11.2026** wurde `eco` mit Tagesziel `7200000` hinterlegt. Die Wochenstrategie gilt bis einschließlich Samstag, 21.11.2026. Das Frontend zeigt auch historische Wochen mit vorhandenen Werten an.
+
+**Neue oder geänderte Wochenstrategie per SQL-Editor festlegen:**
+
+```sql
+INSERT INTO public.cc_vs_week_strategies (week_start, mode, daily_target_points, notes)
+VALUES ('2026-11-23', 'eco_plus', 7200000, 'Gegen gegnerische VS-Punktzahl abgleichen')
+ON CONFLICT (week_start) DO UPDATE
+SET mode = EXCLUDED.mode,
+    daily_target_points = EXCLUDED.daily_target_points,
+    notes = EXCLUDED.notes,
+    updated_at = now();
+```
+
+Erlaubt sind `eco`, `eco_plus` und `all_in`. Immer das **Montagsdatum** als `week_start` angeben. Fehlt für eine Woche ein Eintrag, zeigt die Seite *Strategie nicht festgelegt* und verzichtet auf eine negative Wertung.
+
+Hinweis: 7,2 Millionen sind die allgemeine Schwelle für die neunte Tagestruhe, wenn die nötigen VS-Forschungen freigeschaltet sind. Neue Sonderbelohnungen (z. B. Infinite Roulette, je nach Serververfügbarkeit) und Punktgewinne ohne Ressourceneinsatz können den tatsächlichen Nutzen des Überschusses verändern. Deshalb ist die Kennzeichnung eine **bewusst festgelegte Allianzregel**, kein automatischer Nachweis für Verschwendung.
+
 ## Schildmeldungen
 
 ```sql
