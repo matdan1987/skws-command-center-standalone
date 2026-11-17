@@ -42,6 +42,7 @@ window.SKWS_BACKEND={
  submitMetric(data){
   if(!data||!data.member_name||!['vs_points','donations','storm_score','kills','train_points'].includes(data.metric))return Promise.reject(new Error('Ungültiger Bericht'));
   if(!/^\d{4}-\d{2}-\d{2}$/.test(data.recorded_on)||!Number.isFinite(Number(data.metric_value))||Number(data.metric_value)<0||Number(data.metric_value)>999999999999)return Promise.reject(new Error('Ungültiges Datum oder Punkte'));
+  if(data.metric==='vs_points'&&new Date(data.recorded_on+'T12:00:00').getDay()===0)return Promise.reject(new Error('Sonntag zählt nicht zur VS-Wertung'));
   return request('cc_metric_reports','POST',{member_name:data.member_name,metric:data.metric,metric_value:Number(data.metric_value),recorded_on:data.recorded_on,notes:(data.notes||'').slice(0,280)});
  },
  submitShield(data){
