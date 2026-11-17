@@ -301,6 +301,7 @@ document.addEventListener('input',function(e){
 });
 document.addEventListener('change',function(e){
  var target=e.target;
+ if(target.id==='vsWeekPicker'&&MOD&&MOD.setVsWeek){MOD.setVsWeek(target.value);return;}
  if(target.id==='rosterGroup'){state.groupFilter=target.value;document.getElementById('rosterTable').innerHTML=rosterTable();}
  if(target.id==='rosterStatus'){state.statusFilter=target.value;document.getElementById('rosterTable').innerHTML=rosterTable();}
  if(target.id==='rosterSort'){state.sort=target.value;document.getElementById('rosterTable').innerHTML=rosterTable();}
@@ -309,7 +310,7 @@ document.addEventListener('change',function(e){
 document.addEventListener('submit',function(e){if(e.target.id==='squadForm'){e.preventDefault();submitForm(e.target);}else if(MOD){MOD.handleSubmit(e);}});
 window.addEventListener('keydown',function(e){if(e.key==='Escape')closeMobile();});
 state.members=snapshotMembers();
-if(MOD)MOD.setHost({toast:toast,refresh:function(){refresh(true);}});
+if(MOD)MOD.setHost({toast:toast,refresh:function(){refresh(true);},rerender:render});
 render();
 refresh(false);
 })();
