@@ -26,3 +26,8 @@ Ein **neues, vollständig separates Supabase-Projekt**, eigene Benutzeranmeldung
 Statisches HTML, CSS und JavaScript ohne Framework oder Build-Pipeline. GitHub Pages veröffentlicht den main-Branch.
 
 Details zur Datenkopie unter [DATA-COPY.md](DATA-COPY.md).
+
+
+## Fünf Mentorengruppen (Stand 17.11.2026)
+
+`groups.js` enthält die fünf R4-Kontrollgruppen mit **78 Spielern inklusive 11 Mentoren, zuzüglich 5 R4**. Vier Namen fehlen unter exakt derselben Schreibweise in der Squad-Datenkopie und werden deshalb getrennt markiert: Harald Thorsson, sike, Hadès 930, Ccalley. Die R4-Schreibweise Bedraloc ist dem vorhandenen Squad-Eintrag Bedraloç zugeordnet. Harald Thorsson wird nicht ohne Bestätigung mit Harald verschmolzen. Die Gruppenpläne sind vom produktiven System getrennt; es erfolgen keinerlei produktive Schreibzugriffe.
