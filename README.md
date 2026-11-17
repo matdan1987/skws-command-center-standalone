@@ -46,3 +46,33 @@ Die GitHub-Pages-Anwendung verwendet das **neu angelegte** Supabase-Projekt `ypt
 Spieler wählen ihren Namen und tragen T1 verpflichtend sowie T2–T4 optional ein. Nach dem Absenden ist die Meldung **online gespeichert**, aber noch nicht öffentlich sichtbar. Die Freigabe kann der Betreiber im eigenständigen Supabase-Dashboard vornehmen. Dieser Schutz verhindert, dass eine beliebige Person allein mit der Auswahl eines anderen Spielernamens fremde Werte überschreibt. Ein komfortables Admin-Interface und automatische E-Mail-Erinnerungen sind noch nicht implementiert.
 
 `backend.js` enthält ausschließlich den für Browser bestimmten **Publishable API Key**, keinen geheimen Service-Key. Die statische `snapshot.js` wird nur als Reserveanzeige genutzt, wenn die Online-Datenbank nicht erreichbar ist. Es gibt keinen automatischen Zugriff auf die produktive Datenbank.
+
+
+## Erweiterte Operations-Funktionen (17.11.2026)
+
+Das FarmOps-inspirierte Command Center enthält zusätzliche, echte Tracking-Ansichten:
+
+- **VS-Punkte:** Tagesmeldungen, Beteiligung je Woche, Gruppenranglisten, Vierwochen-Trend
+- **Spenden:** bestätigte Tageswerte, Wochenverlauf, Mitglieder- und Gruppenvergleich
+- **Stürme:** Sturmwerte und freigegebene Eventtermine
+- **Schilde:** gemeldeter Status mit optionaler Ablaufzeit, prüfbare Einreichungen
+- **Zug:** freigegebene Zugpunkte, Tagesmeldungen und Ranglisten
+- **Kill-Tracker:** Kills pro Tag und Kalenderwoche, Rangliste nach bestätigten Werten
+- **Eventkalender und eigene Events:** Vorschläge einreichen, nach Prüfung veröffentlichen
+- **Saisons:** administrativ bestätigte Saisondaten, Phase und Terminangaben
+- **Vergleich:** Vierwochenvergleich der fünf Kennzahlen, keine erfundenen Prozentwerte
+- **Zusammenfassung teilen:** Bericht auf Grundlage realer Online-Daten
+
+### Datengrundlage
+
+In der **separaten** Supabase-Datenbank sind die Tabellen `cc_metric_entries`, `cc_metric_reports`, `cc_shields`, `cc_shield_reports`, `cc_events`, `cc_event_proposals` und `cc_seasons` hinzugekommen. Öffentliche Besucher können bestätigte Daten lesen, aber keine freigegebenen Werte ändern. Neue Meldungen werden in gesonderten, nicht öffentlich lesbaren Prüftabellen abgelegt.
+
+Es gibt **keine direkte Anbindung an Last War**. VS-Punkte, Spenden, Schilde, Kills, Sturmpunkte und Zugbeiträge müssen manuell gemeldet und bestätigt werden. Ohne Meldungen zeigt die Anwendung ausdrücklich keinen erfassten Wert an, statt eine Nullleistung zu unterstellen.
+
+Ein freigegebener Wert je Spieler, Kategorie und Tag wird als **Tagesgesamtwert** gespeichert. Eine spätere korrigierte Meldung für denselben Tag ersetzt den alten Wert. Die Wochen beginnen jeweils montags in der lokalen Browser-Zeitzone.
+
+### Administration
+
+[Freigaben der neuen Tracking-Module](ADMIN-TRACKING.md) und [Truppen-Freigaben](ADMIN.md). Ein eigener geschützter Admin-Login fehlt noch. Das öffentliche Dashboard verrät keine privaten eingegangenen Meldungen und enthält keinen Secret-/Service-Role-Schlüssel.
+
+Beim Ausbau wurden das ursprüngliche SKWS-Squads-Repository, dessen Tabellen und API-Konfigurationen nicht verändert.
