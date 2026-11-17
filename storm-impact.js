@@ -86,8 +86,27 @@ function stormPage(members){
 function isProvisional(r){return /zwischenstand|vorläufig|kein endergebnis/i.test(String(r.notes||''));}
 function cfg(){return array('activityRules')[0]||null;}
 function vsStrategy(week){return array('vsStrategies').find(function(s){return s.week_start===week;})||null;}
-function classifyPlayer(m,week,rules){
- var start=week,end=ds(week,6),vsend=ds(week,5),strategy=vsStrategy(week),
+
+/* Current T1 combat strength, measured against the 90th percentile of reported SKWS T1 squads.
+   Combat capability is not a substitute for confirmed event activity. */
+function combatReference(members){
+ var values=members.map(function(m){var s=Array.isArray(m.squads)?m.squads[0]:null;return s&&Number.isFinite(Number(s.power))&&Number(s.power)>0?Number(s.power):null;})
+   .filter(function(v){return v!==null;}).sort(function(a,b){return a-b;});
+ return {value:values.length?values[Math.ceil(values.length*0.9)-1]:null,count:values.length};
+}
+function combatStats(member,reference){
+ var squads=Array.isArray(member.squads)?member.squads:[],
+  values=squads.map(function(s){return s&&Number.isFinite(Number(s.power))&&Number(s.power)>0?Number(s.power):null;}),
+  t1=values.length&&values[0]!==null?values[0]:null,
+  available=values.filter(function(n){return n!==null;});
+ return {t1:t1,reported:available.length,total:available.length?available.reduce(function(a,b){return a+b;},0):null,
+ score:t1!==null&&reference&&reference.value?Math.round(Math.min(100,100*t1/reference.value)):null};
+}
+function numM(v){return Number(v).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:2})+' Mio.';}
+
+function classifyPlayer(m,week,rules,reference){
+ var combat=combatStats(m,reference),powerForIndex=week===thisWeek()?combat.score:null,
+ start=week,end=ds(week,6),vsend=ds(week,5),strategy=vsStrategy(week),
  vsGoal=Number(strategy&&strategy.daily_target_points||7200000),
  donationMin=Number(rules.min_daily_donations),
  stormMin=Number(rules.min_storm_individual_points),
@@ -121,17 +140,19 @@ function classifyPlayer(m,week,rules){
  var confirmed=[
   {kind:'VS',weight:Number(rules.weight_vs),value:avg(finalVS,calcVS),days:finalVS.length},
   {kind:'Spenden',weight:Number(rules.weight_donations),value:avg(finalDonations,calcDonation),days:finalDonations.length},
-  {kind:'Wüstensturm',weight:Number(rules.weight_storm),value:avg(validStorm,calcStorm),days:validStorm.length}
+  {kind:'Wüstensturm',weight:Number(rules.weight_storm),value:avg(validStorm,calcStorm),days:validStorm.length},
+  {kind:'Kampfkraft',weight:Number(rules.weight_power||0),value:powerForIndex,days:powerForIndex===null?0:1}
  ];
  var available=confirmed.filter(function(x){return x.value!==null&&x.weight>0;}),
  includedWeight=available.reduce(function(s,x){return s+x.weight;},0),
  score=includedWeight?Math.round(available.reduce(function(s,x){return s+x.value*x.weight;},0)/includedWeight):null;
  // Vergleichbar erst nach ausreichenden abgeschlossenen Tagen in mindestens einem Regelbereich.
- var established=available.length>=2&&(finalVS.length>=Number(rules.min_final_vs_days)||finalDonations.length>=Number(rules.min_final_donation_days));
+ var confirmedActivityCount=available.filter(function(c){return c.kind!=='Kampfkraft';}).length;
+ var established=confirmedActivityCount>=2&&(finalVS.length>=Number(rules.min_final_vs_days)||finalDonations.length>=Number(rules.min_final_donation_days));
  var provisionalVS=vs.length?avg(vs,calcVS):null,provisionalDonation=donations.length?avg(donations,calcDonation):null,
- previews=[{w:Number(rules.weight_vs),v:provisionalVS},{w:Number(rules.weight_donations),v:provisionalDonation}].filter(function(x){return x.v!==null&&x.w>0;}),
+ previews=[{w:Number(rules.weight_vs),v:provisionalVS},{w:Number(rules.weight_donations),v:provisionalDonation},{w:Number(rules.weight_power||0),v:powerForIndex}].filter(function(x){return x.v!==null&&x.w>0;}),
  previewWeight=previews.reduce(function(s,x){return s+x.w;},0),
- trend=previews.length>=2&&previewWeight?Math.round(previews.reduce(function(s,x){return s+x.w*x.v;},0)/previewWeight):null;
+ trend=provisionalVS!==null&&provisionalDonation!==null&&previewWeight?Math.round(previews.reduce(function(s,x){return s+x.w*x.v;},0)/previewWeight):null;
  var issues=[];
  if(surplus>0)issues.push('Eco-Überschuss +'+num(surplus));
  if(lowDonations)issues.push(lowDonations+' Spendentag'+(lowDonations===1?'':'e')+' unter '+num(donationMin));
@@ -146,7 +167,7 @@ function classifyPlayer(m,week,rules){
  var teamNames=stormEntries.map(function(r){var match=ownMatches.find(function(x){return x.id===r.match_id;});return match?match.team:null;}).filter(Boolean);
  return {member:m,vs:vs,don:donations,finalVS:finalVS,finalDon:finalDonations,storm:stormEntries,
     attendance:validStorm.filter(function(x){return x.attendance==='present';}).length,assigned:stormEntries.length,
-    teams:Array.from(new Set(teamNames)).join('/'),score:score,trend:trend,status:status,established:established,
+    teams:Array.from(new Set(teamNames)).join('/'),combat:combat,powerForIndex:powerForIndex,score:score,trend:trend,status:status,established:established,
     issues:issues,positive:positive,surplus:surplus,overDays:overDays,lowDonations:lowDonations,
     observed:vs.length+donations.length+stormEntries.length};
 }
@@ -157,7 +178,7 @@ function impactHighlights(rows,provisional){
  if(!list.length)return block(provisional?'Noch keine ausreichend vergleichbaren positiven Zwischenstände.':'Noch keine belastbar bestätigten Highlights. Dafür sind mehrere abgeschlossene Wertungstage nötig.');
  return '<div class="ops-focus-list">'+list.map(function(x){
  return '<div class="ops-focus-item"><div><strong>'+esc(x.member.display)+'</strong><small>'+
- (x.vs.length?x.vs.length+' VS-Tageswert'+(x.vs.length===1?'':'e'):'Keine VS-Meldung')+' · '+x.don.length+' Spendentag'+(x.don.length===1?'':'e')+
+ (x.vs.length?x.vs.length+' VS-Tageswert'+(x.vs.length===1?'':'e'):'Keine VS-Meldung')+' · '+x.don.length+' Spendentag'+(x.don.length===1?'':'e')+(x.combat.t1!==null?' · T1 '+numM(x.combat.t1):'')+
  '</small></div>'+pill(provisional?'review':'good',provisional?'Trend '+x.trend+'/100':'Index '+x.score+'/100')+'</div>';
  }).join('')+'</div>';
 }
@@ -201,7 +222,7 @@ function impactTable(rows,week){
  if(as===null&&bs!==null)return 1;if(bs===null&&as!==null)return -1;
  return (bs||0)-(as||0)||a.member.display.localeCompare(b.member.display,'de');
  });
- return '<div class="table-scroll"><table class="ops-impact-table"><thead><tr><th>Spieler</th><th>VS-Tage</th><th>Spendentage</th><th>Wüstensturm</th><th>Index / Trend</th><th>Einordnung</th></tr></thead><tbody>'+
+ return '<div class="table-scroll"><table class="ops-impact-table"><thead><tr><th>Spieler</th><th>VS-Tage</th><th>Spendentage</th><th>Wüstensturm</th><th>Kampfkraft</th><th>Index / Trend</th><th>Einordnung</th></tr></thead><tbody>'+
  filtered.map(function(r){
  var label=r.established?'Index '+r.score:r.trend!==null?'Trend '+r.trend:'–';
  var flag=r.established?r.status==='Highlight'?'good':r.status==='Lowlight'?'warn':'quiet':
@@ -210,6 +231,7 @@ function impactTable(rows,week){
  '<td class="num">'+r.vs.length+(r.finalVS.length!==r.vs.length?' <small>vorl.</small>':'')+'</td>'+
  '<td class="num">'+r.don.length+(r.finalDon.length!==r.don.length?' <small>vorl.</small>':'')+'</td>'+
  '<td>'+esc(r.assigned?r.teams+' · '+r.attendance+'/'+r.assigned+' teilg.':'Nicht eingeteilt')+'</td>'+
+ '<td>'+(r.combat.t1!==null?'<strong>T1 '+numM(r.combat.t1)+'</strong><small class="ops-row-detail">T1–T4 gemeldet: '+r.combat.reported+'/4 · Summe '+numM(r.combat.total)+'</small>'+(r.powerForIndex!==null?'<small class="ops-row-detail">Kraftindex '+r.powerForIndex+'/100</small>':''):'<small>Keine T1-Meldung</small>')+'</td>'+
  '<td><strong>'+label+'</strong></td><td>'+pill(flag,r.issues.length&&!r.established?'Prüfbedarf':r.status)+'</td></tr>';
  }).join('')+'</tbody></table></div>'+
  (!filtered.length?block('Für diesen Filter sind derzeit keine Einträge vorhanden.'):'');
@@ -218,7 +240,7 @@ function impactPage(members){
  var rules=cfg();
  var week=IMPACT_WEEK||thisWeek();
  if(!rules)return '<header class="page-header"><div><h1 class="page-title">Gesamtstatistik</h1></div></header>'+block('Die administrativen Mindestanforderungen konnten nicht geladen werden. Keine Bewertung möglich.');
- var rows=members.map(function(m){return classifyPlayer(m,week,rules);}),
+ var benchmark=combatReference(members),rows=members.map(function(m){return classifyPlayer(m,week,rules,benchmark);}),
  report=rows.filter(function(r){return r.observed>0;}).length,
  good=rows.filter(function(r){return r.established&&r.status==='Highlight';}).length,
  low=rows.filter(function(r){return r.established&&r.status==='Lowlight';}).length,
@@ -229,17 +251,17 @@ function impactPage(members){
  '<p class="muted">Highlights, Lowlights und begründeter Prüfbedarf statt bloßer Punkteranglisten</p></div><div class="page-actions">'+
  impactWeekOptions(week)+'</div></header>'+
  '<div class="ops-overview-strip"><span>VS-Strategie: '+esc(strat?({eco:'Eco',eco_plus:'Eco Plus',all_in:'All In'}[strat.mode]||strat.mode):'Nicht festgelegt')+'</span>'+
- '<span>Spenden-Minimum: '+num(rules.min_daily_donations)+' pro erfasstem Tag</span><span>Wüstensturm A/B separat</span></div>'+
+ '<span>Spenden-Minimum: '+num(rules.min_daily_donations)+' pro erfasstem Tag</span><span>Wüstensturm A/B separat</span><span>T1-Referenz: '+(benchmark.value!==null?numM(benchmark.value):'noch keine Truppmeldung')+'</span></div>'+
  '<div class="ops-kpi-grid">'+
  '<div><small>Mit Daten</small><strong>'+report+' / '+rows.length+'</strong></div>'+
  '<div><small>Bestätigte Highlights</small><strong>'+good+'</strong></div>'+
  '<div><small>Bestätigte Lowlights</small><strong>'+low+'</strong></div>'+
  '<div><small>Vorläufiger Prüfbedarf</small><strong>'+pending+'</strong></div>'+
  '<div><small>Ohne Meldung</small><strong>'+noRecords+'</strong></div></div>'+
- block('<strong>Bewertungsregeln:</strong> VS '+rules.weight_vs+' %, Spenden '+rules.weight_donations+' %, Wüstensturm '+rules.weight_storm+
+ block('<strong>Bewertungsregeln:</strong> VS '+rules.weight_vs+' %, Spenden '+rules.weight_donations+' %, Wüstensturm '+rules.weight_storm+' %, T1-Kampfkraft '+(rules.weight_power||0)+
  ' %. Nur tatsächlich erfasste, abgeschlossene Kategorien fließen gewichtet ein. Für eine belastbare Einordnung sind mindestens zwei Bereiche und mindestens '+
  rules.min_final_vs_days+' abgeschlossene VS-Tage oder '+rules.min_final_donation_days+' abgeschlossene Spendentage erforderlich. '+
- 'Fehlende Daten werden nie stillschweigend als Null gewertet. Der Wüstensturm zählt nur bei bestätigter Teilnahme oder bestätigtem Fehlen eines Stammspielers in einem abgeschlossenen Gefecht.')+
+ 'Fehlende Daten werden nie stillschweigend als Null gewertet. T1-Kampfkraft dient als eigener Faktor, nicht als Ersatz für Aktivitätsnachweise. Der Wüstensturm zählt nur bei bestätigter Teilnahme oder bestätigtem Fehlen eines Stammspielers in einem abgeschlossenen Gefecht.')+
  '<div class="ops-analysis-grid"><section class="panel">'+panelHeading('Highlights','Vorläufig positive Tendenzen; endgültige Highlights erst bei belastbarer Datenlage')+
  '<div class="ops-list-subhead">Positive Zwischenstände</div>'+impactHighlights(rows,true)+'<div class="ops-list-subhead">Bestätigte Highlights</div>'+impactHighlights(rows,false)+'</section>'+
  '<section class="panel">'+panelHeading('Lowlights','Nur tatsächlich bestätigte schwache Gesamtleistung')+
@@ -256,7 +278,7 @@ function impactPage(members){
  impactTable(rows,week)+'</section>'+
  block('Die Startwerte von 5.000 Spendenpunkten, mindestens drei abschließenden Wertungstagen und die Gewichtung sind anpassbare Allianz-Vorschläge, keine Spielregeln. '+
  'Fehlende Wüstensturm-Teilnahme zählt nur dann als negativ, wenn ein bestätigtes Fernbleiben eines Stammspielers dokumentiert wurde. '+
- 'Ein Ersatzspieler ohne Einsatz bleibt neutral. VS-Eco-Überschüsse sind Strategieabweichungen, kein nachgewiesener Ressourcenverbrauch.');
+ 'Ein Ersatzspieler ohne Einsatz bleibt neutral. Die aktuelle gemeldete T1-Kampfkraft zählt nur für die laufende Woche im Index, da historische Kampfkraft-Stände bislang nicht archiviert werden. T2 bis T4 sind Zusatzinformationen. Ein fehlender T1-Wert ist keine Null und ein starker T1-Wert beweist keine Aktivität. VS-Eco-Überschüsse sind Strategieabweichungen, kein nachgewiesener Ressourcenverbrauch.');
 }
 MOD.render=function(type,members){
  if(type==='storms')return stormPage(members||[]);
