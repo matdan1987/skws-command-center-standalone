@@ -30,7 +30,7 @@ function displayDate(v){if(!v)return 'Nicht festgelegt';var d=new Date(v);return
 function prettyDate(v){return new Date(v+'T12:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});}
 function weekLabel(week){return prettyDate(week)+' – '+prettyDate(weekEnd(week));}
 function healthy(){return READY&&!ERROR;}
-function statusText(){return '<div class="mod-state">'+(healthy()?ico('check')+' Bestätigte Online-Daten, Stand '+new Date().toLocaleDateString('de-DE'):ico('alert')+' '+escape(ERROR||'Lade Daten'))+'</div>';}
+function statusText(){return '<div class="mod-state">'+(healthy()?ico('check')+' Online-Daten geladen, Stand '+new Date().toLocaleDateString('de-DE'):ico('alert')+' '+escape(ERROR||'Lade Daten'))+'</div>';}
 function header(kicker,title,sub,action){
  return '<header class="page-header"><div><div class="eyebrow">'+escape(kicker)+'</div><h1 class="page-title">'+escape(title)+'</h1><p class="muted">'+escape(sub)+'</p></div><div class="page-actions">'+(action||'')+'</div></header>';
 }
@@ -72,7 +72,7 @@ function metricPage(key,members){
  var bars='<div class="mod-weeks">'+history.map(function(r){return '<div class="mod-week"><span>'+escape(prettyDate(r.week))+'</span><div class="mod-weekbar"><div style="height:'+(max?Math.max(2,Math.round(100*r.sum/max)):0)+'%"></div></div><b>'+escape(r.sum?compact(r.sum):'–')+'</b></div>';}).join('')+'</div>';
  var panel='<div class="dashboard-grid"><section class="panel"><div class="panel-heading"><div><h2>Gruppenvergleich</h2><div class="description">Bestätigte Werte in dieser Woche</div></div></div>'+groupTable(cfg.metric,members,wk)+'</section>'+
  '<section class="panel"><div class="panel-heading"><div><h2>Vierwochen-Trend</h2><div class="description">Tagesmeldungen summiert pro Kalenderwoche</div></div></div>'+bars+'</section></div>';
- return header('ALLIANCE / TRACKING',cfg.name,cfg.subtitle,btn('Vergleich öffnen','compare'))+statusText()+(cfg.metric==='vs_points'&&forMetric('vs_points',wk).some(function(r){return /Zwischenstand/i.test(r.notes||'');})?hint('<strong>Vorläufiger VS-Zwischenstand vom '+prettyDate(wk)+':</strong> Die eingetragenen Punkte stammen aus den Last-War-Screenshots und sind ausdrücklich noch kein Endergebnis. Die Werte werden nach dem offiziellen Abschluss aktualisiert.'): '')+
+ return header('ALLIANCE / TRACKING',cfg.name,cfg.subtitle,btn('Vergleich öffnen','compare'))+statusText()+(forMetric(cfg.metric,wk).some(function(r){return /Zwischenstand/i.test(r.notes||'');}) ? hint(cfg.metric==='donations' ? '<strong>Vorläufiger Spenden-Tagesstand (16.11.2026):</strong> Die 97 Werte stammen aus der täglichen Last-War-Rangliste. Die angezeigte Wochensumme enthält derzeit nur gemeldete Tageswerte und ist weder das abgeschlossene Wochen- noch das Endergebnis.' : '<strong>Vorläufiger VS-Zwischenstand:</strong> Die eingetragenen Punkte stammen aus den Last-War-Screenshots und sind ausdrücklich noch kein Endergebnis. Die Werte werden nach dem offiziellen Abschluss aktualisiert.') : '')+
  '<div class="metrics">'+metricsCard('Diese Woche',current.rows.length?compact(current.sum):'–','Woche '+weekLabel(wk),'chart')+
  metricsCard('Aktive Melder',current.rows.length?String(current.count):'–','Spieler mit freigegebenen Werten','users')+
  metricsCard('Vorwoche',last.rows.length?compact(last.sum):'–','Woche '+weekLabel(prev),'clock')+
