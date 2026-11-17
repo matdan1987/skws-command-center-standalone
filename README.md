@@ -1,35 +1,28 @@
 # SKWS Command Center · Standalone
 
-Ein **vollständig eigenständiges** Projekt für SKWS / Skywalkers auf Last War Server 1858.
+Eigenständige GitHub-Pages-Anwendung für Skywalkers / Last War Server 1858. **Kein Fork, keine produktive Abhängigkeit.**
 
-## Aktueller Stand
+## Öffentliche Testversion mit echten Daten
+Die Seite lädt aus `snapshot.js` eine **einmalige Momentaufnahme** der echten Mitgliederdaten, die ausschließlich mit lesenden Datenbankabfragen erstellt wurde.
 
-- Öffentliche GitHub-Pages-Demo mit responsivem Dark-Theme
-- Fiktive Mitglieder und Mentorengruppen 1 bis 5
-- T1-Truppentyp und Kampfkraft als Pflichtfelder, T2 bis T4 optional
-- Mitgliederübersicht, Suche, Gruppenfilter, Meldestatus
-- Auswertung und lokales Änderungsjournal
-- CSV- und JSON-Export sowie JSON-Import
-- Daten verbleiben ausschließlich im jeweiligen Browser (localStorage)
+- 96 Mitglieder mit Spieleralias und Rang
+- 30 dazu passende Meldungen mit T1–T4-Truppentypen und Kampfkraft
+- Mitgliederliste, Suche, Filter, Rangliste und Meldestatistik
+- Erfassungsformular und Export als JSON/CSV
+- Fehlende Mentorengruppen bleiben ausdrücklich **nicht zugeordnet**. Diese Information war in der Datenquelle nicht vorhanden.
 
-**Noch nicht enthalten:** Gemeinsame persistente Datenbank, sichere Spieleranmeldung, automatische E-Mail-Erinnerungen, echte Mitglieder. Eine statische GitHub-Pages-Seite allein kann keine gemeinsame Datenhaltung gewährleisten.
+**Öffentliche Daten:** Die Spieleraliasse, Ränge und Truppenwerte sind in dieser GitHub-Pages-Website und in diesem öffentlichen GitHub-Repository sichtbar. Es wurden keine E-Mail-Adressen, Passwörter, Tokens, Zugangsdaten, internen Logs oder Admin-Einstellungen kopiert.
 
-## Schutz des produktiven SKWS Squads Systems
+## Strikte Isolation
+- Bestehendes GitHub-Repository, Produktivdatenbank und Google-Tabelle bleiben unverändert.
+- Die öffentlich erreichbare Anwendung greift **zur Laufzeit niemals** auf diese Systeme zu.
+- Alle Änderungen in dieser Phase werden ausschließlich im Browser des jeweiligen Nutzers (localStorage) gespeichert. Deshalb sind neue Meldungen noch **nicht für andere Spieler sichtbar**.
+- Keine automatische Synchronisation. Der echte Datenstand in snapshot.js ist eine statische Kopie.
 
-Dies ist ein **neues GitHub-Repository**, kein Fork und keine Kopie der Produktivbereitstellung. Die Anwendung nutzt **keine** vorhandenen Produktions-URLs, Supabase-Referenzen, API-Schlüssel, Secrets oder produktiven Google-Tabellen. Änderungen in dieser Demo können das bestehende SKWS Squads Script technisch nicht beeinflussen.
+## Geplante Erweiterung
+Ein **neues, vollständig separates Supabase-Projekt**, eigene Benutzeranmeldung und Schreibberechtigungen sowie ein eigenständiger E-Mail-Erinnerungsdienst. Keine gemeinsame Infrastruktur mit dem bestehenden SKWS-Squads-System.
 
-Für den produktiven, unabhängigen Ausbau ist **ein komplett neues Supabase-Projekt** mit getrennter Authentifizierung und Datenbank notwendig. Das bestehende Supabase-Projekt und Repository dürfen niemals zur Laufzeit angebunden oder modifiziert werden.
+## Technik
+Statisches HTML, CSS und JavaScript ohne Framework oder Build-Pipeline. GitHub Pages veröffentlicht den main-Branch.
 
-## Weiterentwicklung
-
-1. Neues, unabhängiges Backend-Projekt und Zugriffsregeln planen.
-2. Sicherheit gegen unberechtigte Änderungen implementieren, Spieleridentitäten verifizieren.
-3. Optional eine ausdrücklich freigegebene *Kopie* der Mitgliederliste übernehmen; nie schreibend aufs Live-System zugreifen.
-4. Wöchentliche Erinnerung erst nach Double-Opt-in mit Abmeldemöglichkeit einrichten.
-5. End-to-End-Test mit Testspielern vor Nutzung in der Allianz.
-
-## Entwicklung
-
-Ohne Framework oder Build-Prozess. Bearbeite index.html, styles.css, app.js. GitHub Pages veröffentlicht den Stand des Repositorys. SQL- oder Service-Schlüssel gehören niemals ins öffentliche Repo.
-
-© Eigenständige Demo, nicht offiziell mit Last War verbunden.
+Details zur Datenkopie unter [DATA-COPY.md](DATA-COPY.md).
