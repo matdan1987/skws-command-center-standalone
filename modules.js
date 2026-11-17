@@ -72,7 +72,7 @@ function metricPage(key,members){
  var bars='<div class="mod-weeks">'+history.map(function(r){return '<div class="mod-week"><span>'+escape(prettyDate(r.week))+'</span><div class="mod-weekbar"><div style="height:'+(max?Math.max(2,Math.round(100*r.sum/max)):0)+'%"></div></div><b>'+escape(r.sum?compact(r.sum):'–')+'</b></div>';}).join('')+'</div>';
  var panel='<div class="dashboard-grid"><section class="panel"><div class="panel-heading"><div><h2>Gruppenvergleich</h2><div class="description">Bestätigte Werte in dieser Woche</div></div></div>'+groupTable(cfg.metric,members,wk)+'</section>'+
  '<section class="panel"><div class="panel-heading"><div><h2>Vierwochen-Trend</h2><div class="description">Tagesmeldungen summiert pro Kalenderwoche</div></div></div>'+bars+'</section></div>';
- return header('ALLIANCE / TRACKING',cfg.name,cfg.subtitle,btn('Vergleich öffnen','compare'))+statusText()+
+ return header('ALLIANCE / TRACKING',cfg.name,cfg.subtitle,btn('Vergleich öffnen','compare'))+statusText()+(cfg.metric==='vs_points'&&forMetric('vs_points',wk).some(function(r){return /Zwischenstand/i.test(r.notes||'');})?hint('<strong>Vorläufiger VS-Zwischenstand vom '+prettyDate(wk)+':</strong> Die eingetragenen Punkte stammen aus den Last-War-Screenshots und sind ausdrücklich noch kein Endergebnis. Die Werte werden nach dem offiziellen Abschluss aktualisiert.'): '')+
  '<div class="metrics">'+metricsCard('Diese Woche',current.rows.length?compact(current.sum):'–','Woche '+weekLabel(wk),'chart')+
  metricsCard('Aktive Melder',current.rows.length?String(current.count):'–','Spieler mit freigegebenen Werten','users')+
  metricsCard('Vorwoche',last.rows.length?compact(last.sum):'–','Woche '+weekLabel(prev),'clock')+
