@@ -21,7 +21,7 @@ function weekEnd(start){return addDays(start,6);}
 function currentWeek(){return weekStart(new Date());}
 function previousWeek(){return addDays(currentWeek(),-7);}
 function inWeek(row,start){return row.recorded_on>=start&&row.recorded_on<=weekEnd(start);}
-function forMetric(metric,start){return DATA.metrics.filter(function(m){return m.metric===metric&&(!start||inWeek(m,start));});}
+function forMetric(metric,start){return DATA.metrics.filter(function(m){return m.metric===metric&&(!start||(inWeek(m,start)&&(metric!=='vs_points'||m.recorded_on<=addDays(start,5))));});}
 function aggregate(rows){return rows.reduce(function(n,r){return n+Number(r.metric_value||0);},0);}
 function contributors(rows){return new Set(rows.map(function(r){return r.member_name;})).size;}
 function groupOf(name,members){var m=members.find(function(x){return x.name===name;});return m?m.group:0;}
@@ -296,6 +296,7 @@ async function send(event){
    var name=form.querySelector('#metricMember').value,metric=form.dataset.metric,raw=form.querySelector('#metricValue').value,day=form.querySelector('#metricDate').value;
    var value=Number(raw.replace(',','.')),note=form.querySelector('#metricNote').value;
    if(!name||!raw||!Number.isFinite(value)||value<0||value>999999999999)throw Error('Ungültige Eingaben');
+   if(metric==='vs_points'&&new Date(day+'T12:00:00').getDay()===0)throw Error('Sonntag ist VS-Vorbereitungstag. Wähle Montag bis Samstag.');
    await api.submitMetric({member_name:name,metric:metric,recorded_on:day,metric_value:value,notes:note});
   }else if(kind==='shieldReportForm'){
    var player=form.querySelector('#shieldMember').value,status=form.querySelector('#shieldStatus').value,expiration=form.querySelector('#shieldExpires').value;
