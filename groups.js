@@ -1,15 +1,17 @@
-/* SKWS Mentorengruppen vom 17.11.2026; keine produktive Laufzeitverbindung. */
+/* Bestätigte SKWS-Mentorengruppe: der frühere Harald Thorsson/Thorsten heißt jetzt Harald. */
 window.SKWS_MENTOR_GROUPS={
-  "version": "2026-11-17",
+  "version": "2026-11-17-harald-rename",
   "aliases": {
-    "Bedraloc": "Bedraloç"
+    "Bedraloc": "Bedraloç",
+    "Harald Thorsson": "Harald",
+    "Harald Thorsten": "Harald"
   },
   "groups": [
     {
       "id": 1,
       "controller": "MissLizzie",
       "mentors": [
-        "Harald Thorsson",
+        "Harald",
         "Boss Ralle"
       ],
       "members": [

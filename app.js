@@ -21,6 +21,10 @@ var state;try{state=JSON.parse(localStorage.getItem(KEY)||'null');if(!valid(stat
 var PLAN=window.SKWS_MENTOR_GROUPS||{groups:[],aliases:{}};
 function applyGroupPlan(){
  var roster=new Set((SNAPSHOT.members||[]).map(function(m){return m.name.toLowerCase();}));
+ // Veralteten, nicht bearbeiteten Doppel-Eintrag aus früheren Gruppenständen bereinigen.
+ state.players=state.players.filter(function(p){
+  return !(p.id==='group-only-1-Mentor-Harald Thorsson'&&!reported(p));
+ });
  state.players.forEach(function(p){p.group=0;p.role='Unzugeordnet';p.listedOnly=!roster.has(p.name.toLowerCase());});
  function assign(name,g,role){
   var real=(PLAN.aliases||{})[name]||name;
@@ -63,7 +67,7 @@ var top=state.players.filter(reported).sort(function(a,b){return b.squads[0].pow
 return heading('ALLIANZ / OVERVIEW','SKWS Command Center','Skywalkers · Server 1858 · eigenständige Datenkopie',button('Mentorengruppen öffnen ↗','groups',true))+
 '<div class="notice">◉ <b>Eigenständiges Projekt.</b> Echte Squad-Daten als einmalige Momentaufnahme sowie die bestätigten Mentorengruppen. Keine Live-Verbindung zur produktiven Datenbank; Änderungen bleiben nur in diesem Browser.</div>'+
 '<div class="stats">'+card('Squad-Spielerliste',base,'Aus lesender Datenkopie')+card('Gruppenspieler',assigned.length,'Inklusive '+ment+' Mentoren')+card('Bestätigte Mentoren',ment,'In 5 Mentorengruppen')+card('R4-Kontrolle',control,'Zusätzlich zu 78 Spielern')+'</div>'+
-'<div class="notice neutral"><b>Truppenmeldungen:</b> '+reportedBase+' von '+base+' Spielern haben T1 eingetragen. '+(base-reportedBase)+' Spieler noch ohne T1. Vier Namen der Mentorengruppen sind bisher nicht exakt in der Squad-Liste enthalten.</div>'+
+'<div class="notice neutral"><b>Truppenmeldungen:</b> '+reportedBase+' von '+base+' Spielern haben T1 eingetragen. '+(base-reportedBase)+' Spieler noch ohne T1. Drei Namen der Mentorengruppen sind bisher nicht exakt in der Squad-Liste enthalten.</div>'+
 '<div class="grid-two"><section class="panel"><h2>T1-Abdeckung je Mentorengruppe</h2><p class="subline">Ohne die jeweilige R4-Kontrollperson</p><div class="groups">'+bars+'</div></section><section class="panel"><h2>Stärkste gemeldete T1</h2><p class="subline">Einmalige Momentaufnahme</p>'+table(top)+'</section></div>';
 }
 function groupPerson(name,g){
@@ -85,7 +89,7 @@ var unmatched=state.players.filter(function(p){return p.group>0&&p.listedOnly;})
 return heading('ALLIANZ / GRUPPEN','Mentorengruppen','Verbindliche Aufteilung vom 17. November 2026',button('Alle Mitglieder','members'))+
 '<div class="notice">78 Gruppenspieler einschließlich 11 Mentoren, <b>zuzüglich 5 R4-Kontrollpersonen</b>. Die R1- und R5-Spieler sind in dieser Gruppeneinteilung nicht enthalten.</div>'+
 '<div class="group-summary"><span><b>5</b> Gruppen</span><span><b>78</b> Gruppenspieler</span><span><b>11</b> Mentoren</span><span><b>5</b> R4</span></div>'+
-(unmatched.length?'<div class="notice roster-warning"><b>Abgleich offen ('+unmatched.length+')</b>: '+unmatched.join(', ')+'. Harald Thorsson wurde nicht ohne Bestätigung mit Harald aus der Squad-Liste gleichgesetzt.</div>':'')+
+(unmatched.length?'<div class="notice roster-warning"><b>Abgleich offen ('+unmatched.length+')</b>: '+unmatched.join(', ')+'. Harald wird jetzt unter seinem aktuellen Spielernamen geführt und mit seinen gemeldeten Truppendaten verknüpft.</div>':'')+
 '<div class="group-directory">'+cards+'</div>';
 }
 function members(){var list=state.players.filter(function(p){return (grp==='all'||Number(grp)===p.group)&&(status==='all'||(status==='yes'?reported(p):!reported(p)))&&p.name.toLowerCase().includes(query.toLowerCase());});return heading('ALLIANZ / ROSTER','Mitgliederübersicht','Spieler aus dem Squad-Datenstand und zusätzliche Namen aus der Mentorengruppenplanung.',button('+ Spieler anlegen','entry',true))+'<div class="toolbar"><input id="search" class="control search" placeholder="Spieler suchen …" value="'+esc(query)+'" aria-label="Spieler suchen"><select id="groupFilter" class="control" aria-label="Mentorengruppe">'+['all',0,1,2,3,4,5].map(function(g){return '<option value="'+g+'"'+(String(g)===String(grp)?' selected':'')+'>'+(g==='all'?'Alle Mentorengruppen':g===0?'Nicht zugeordnet':'Gruppe '+g)+'</option>';}).join('')+'</select><select id="statusFilter" class="control" aria-label="Meldestatus"><option value="all"'+(status==='all'?' selected':'')+'>Alle Meldungen</option><option value="yes"'+(status==='yes'?' selected':'')+'>T1 gemeldet</option><option value="no"'+(status==='no'?' selected':'')+'>Noch kein T1</option></select></div><p class="muted" style="margin-bottom:14px">'+list.length+' von '+state.players.length+' angezeigten Personen · '+(SNAPSHOT.members||[]).length+' aus Squad-Liste</p>'+table(list);}
