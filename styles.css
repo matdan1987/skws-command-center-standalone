@@ -84,3 +84,34 @@
 .mod-admin-label{font-size:10px;letter-spacing:.09em;font-weight:800;color:#88bdaa;margin:16px 0 10px}
 .mod-admin-grid .code-panel{font-size:10px}
 @media(max-width:1100px){.mod-admin-grid{grid-template-columns:1fr}}
+
+
+/* VS daily strategy: read-only, week-specific Eco discipline. */
+.vs-week-picker{display:flex;align-items:center;gap:9px;color:#94aabf;font-size:10px;font-weight:790;letter-spacing:.08em}
+.vs-week-picker select{background:#13243a;border:1px solid #39516b;color:#e4eff8;border-radius:8px;min-height:40px;padding:9px 13px;font-size:12px;font-weight:650;max-width:205px}
+.vs-strategy-panel{margin:0 0 22px;border-color:#3b4d62;padding-bottom:15px}
+.vs-strategy-panel .panel-heading{margin-bottom:16px}
+.vs-strategy-panel h2{font-size:20px;line-height:1.5}
+.vs-eyebrow{font-size:10px;letter-spacing:.10em;font-weight:760;color:#88b9c8;margin:0 0 5px}
+.vs-mode{display:inline-flex;vertical-align:middle;align-items:center;border-radius:7px;padding:3px 10px;font-size:14px;font-weight:830}
+.vs-mode-eco{background:#573039;border:1px solid #95515e;color:#ffc0c5}
+.vs-mode-plus{background:#4d3c23;border:1px solid #80613c;color:#ffdc9f}
+.vs-mode-all{background:#193c35;border:1px solid #39745f;color:#a7edcb}
+.vs-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin:16px 0 21px;background:#102035;border:1px solid #304158;border-radius:11px;overflow:hidden}
+.vs-summary>div{display:flex;flex-direction:column;justify-content:center;gap:9px;padding:16px;border-right:1px solid #304158;min-width:0}
+.vs-summary>div:last-child{border-right:0}
+.vs-summary span{font-size:10px;color:#91a7ba;line-height:1.4}
+.vs-summary strong{font-size:clamp(14px,1.5vw,19px);letter-spacing:-.02em;font-weight:770;white-space:nowrap}
+.vs-negative{color:#ff9da9!important}
+.vs-strategy-panel table{min-width:700px}
+.vs-strategy-panel td{padding:12px 13px}
+.vs-day-theme{display:inline-block;margin-left:8px;color:#8197a9;font-size:11px;font-weight:450}
+.vs-pill{display:inline-flex;align-items:center;border-radius:6px;padding:5px 8px;border:1px solid #344b62;white-space:nowrap;font-weight:750;font-size:10px}
+.vs-pill-negative{color:#ffc3c8;background:#452630;border-color:#844855}
+.vs-pill-review{color:#ffdfa6;background:#483920;border-color:#7d643f}
+.vs-pill-good{color:#a4ebcb;background:#1b3b31;border-color:#346b57}
+.vs-pill-neutral{color:#a6b5c4;background:#253448;border-color:#3b4c60}
+.vs-day-count{font-size:10px;color:#8ea4b5;white-space:nowrap}
+.vs-explainer{color:#93a8b9;font-size:11px;line-height:1.65;margin:15px 0 0}
+@media(max-width:1200px){.vs-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.vs-summary>div{border-bottom:1px solid #304158}.vs-summary>div:nth-child(3){border-right:0}.vs-summary>div:nth-last-child(-n+2){border-bottom:0}}
+@media(max-width:650px){.vs-week-picker{width:100%;justify-content:space-between}.vs-week-picker select{max-width:210px}.vs-strategy-panel{padding:16px 11px}.vs-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.vs-summary>div:nth-child(3){border-right:1px solid #304158}.vs-summary>div:nth-child(even){border-right:0}.vs-summary>div:nth-last-child(2){border-bottom:1px solid #304158}.vs-summary>div:last-child{border-bottom:0}.vs-summary strong{font-size:16px}.vs-day-theme{display:block;margin:4px 0 0}}
