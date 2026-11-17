@@ -29,18 +29,21 @@ window.SKWS_BACKEND={
  async loadTracking(){
   var since=new Date();since.setDate(since.getDate()-90);
   var from=since.toISOString().slice(0,10);
-  var [metrics,shields,events,seasons,vsStrategies]=await Promise.all([
+  var [metrics,shields,events,seasons,vsStrategies,stormMatches,stormRoster,activityRules]=await Promise.all([
    request('cc_metric_entries?select=member_name,metric,metric_value,recorded_on,notes&recorded_on=gte.'+from+'&order=recorded_on.desc&limit=1000'),
    request('cc_shields?select=member_name,shield_status,expires_at,verified_at&limit=300'),
    request('cc_events?select=id,title,category,starts_at,ends_at,description,location_note&order=starts_at.asc&limit=300'),
    request('cc_seasons?select=id,title,phase,starts_on,ends_on,notes&order=created_at.desc&limit=30'),
-   request('cc_vs_week_strategies?select=week_start,mode,daily_target_points,notes&order=week_start.desc&limit=40')
+   request('cc_vs_week_strategies?select=week_start,mode,daily_target_points,notes&order=week_start.desc&limit=40'),
+   request('cc_desert_storm_matches?select=id,event_date,team,starts_at,opponent,result,own_points,enemy_points,notes&order=event_date.desc&limit=150'),
+   request('cc_desert_storm_roster?select=id,match_id,member_name,slot,attendance,individual_points,notes&limit=1000'),
+   request('cc_activity_rules?select=id,min_daily_donations,min_storm_individual_points,min_final_vs_days,min_final_donation_days,weight_vs,weight_donations,weight_storm,highlight_score,lowlight_score,notes&limit=1')
   ]);
-  if(!Array.isArray(metrics)||!Array.isArray(shields)||!Array.isArray(events)||!Array.isArray(seasons)||!Array.isArray(vsStrategies))throw new Error('Tracking-Daten nicht lesbar');
-  return {metrics:metrics,shields:shields,events:events,seasons:seasons,vsStrategies:vsStrategies};
+  if(!Array.isArray(metrics)||!Array.isArray(shields)||!Array.isArray(events)||!Array.isArray(seasons)||!Array.isArray(vsStrategies)||!Array.isArray(stormMatches)||!Array.isArray(stormRoster)||!Array.isArray(activityRules))throw new Error('Tracking-Daten nicht lesbar');
+  return {metrics:metrics,shields:shields,events:events,seasons:seasons,vsStrategies:vsStrategies,stormMatches:stormMatches,stormRoster:stormRoster,activityRules:activityRules};
  },
  submitMetric(data){
-  if(!data||!data.member_name||!['vs_points','donations','storm_score','kills','train_points'].includes(data.metric))return Promise.reject(new Error('Ungültiger Bericht'));
+  if(!data||!data.member_name||!['vs_points','donations','kills','train_points'].includes(data.metric))return Promise.reject(new Error('Ungültiger Bericht'));
   if(!/^\d{4}-\d{2}-\d{2}$/.test(data.recorded_on)||!Number.isFinite(Number(data.metric_value))||Number(data.metric_value)<0||Number(data.metric_value)>999999999999)return Promise.reject(new Error('Ungültiges Datum oder Punkte'));
   if(data.metric==='vs_points'&&new Date(data.recorded_on+'T12:00:00').getDay()===0)return Promise.reject(new Error('Sonntag zählt nicht zur VS-Wertung'));
   return request('cc_metric_reports','POST',{member_name:data.member_name,metric:data.metric,metric_value:Number(data.metric_value),recorded_on:data.recorded_on,notes:(data.notes||'').slice(0,280)});
