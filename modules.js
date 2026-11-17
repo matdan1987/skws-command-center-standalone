@@ -170,15 +170,30 @@ function dashboardAddon(members){
  (c.data.rows.length?'<div class="mod-summary-value">'+escape(compact(c.data.sum))+'</div><div class="mod-summary-sub">'+c.data.count+' Spieler mit bestätigten Werten</div>':
  noRecords('Noch keine Trackingdaten','Neue Meldungen erscheinen nach Prüfung.'))+
  '<div class="mod-summary-footer"><span>'+escape(weekLabel(wk))+'</span></div></section>';}).join('');
- var perf=DATA.metrics.filter(function(r){return inWeek(r,wk);});
- var per={};perf.forEach(function(r){if(r.metric!=='vs_points'&&r.metric!=='donations')return;var k=r.member_name;per[k]=(per[k]||0)+Number(r.metric_value);});
- var lead=Object.keys(per).sort(function(a,b){return per[b]-per[a];})[0],m=members.find(function(x){return x.name===lead;});
+ var leaders=[
+  {name:'VS-Punkte',data:metricRows('vs_points',members,wk)},
+  {name:'Spenden',data:metricRows('donations',members,wk)},
+  {name:'Sturmpunkte',data:metricRows('storm_score',members,wk)}
+ ];
+ var ranked=leaders.find(function(c){return c.data.length>0;});
+ var first=ranked?ranked.data[0]:null;
  return '<section class="mod-section-header"><div><h2>Allianz-Aktivität</h2><p>Die Bereiche aus dem Operations-Dashboard, mit echten Daten statt Demo-Statistiken</p></div>'+btn('Alle Vergleiche','compare')+'</section>'+
  '<div class="mod-summary-grid">'+cards+'</div>'+
  '<div class="mod-secondary"><div class="mod-secondary-title">'+ico('trophy')+' Wochenleistung</div>'+
- (lead?'<div class="mod-secondary-member"><strong>'+escape(m?m.display:lead)+'</strong><span>VS + Spenden · '+escape(compact(per[lead]))+'</span></div>':
- '<span>Für eine Wochenrangliste fehlen noch geprüfte VS- und Spendenwerte.</span>')+
+ (first?'<div class="mod-secondary-member"><strong>'+escape(first.display)+'</strong><span>Beste Meldung in '+escape(ranked.name)+' · '+escape(compact(first.value))+'</span></div>':
+ '<span>Für eine Wochenrangliste fehlen noch freigegebene Aktivitätswerte.</span>')+
  '<button class="micro-link" data-view="kills">'+ico('trophy')+' Kill-Tracker '+(kill.rows.length?escape(compact(kill.sum)):'ohne Meldungen')+'</button></div>';
+}
+function shareSummary(members){
+ var wk=currentWeek(),roster=members.length,t1=members.filter(function(m){return m.squads&&m.squads[0];}).length;
+ var total=members.reduce(function(n,m){return n+(m.squads&&m.squads[0]?Number(m.squads[0].power||0):0);},0);
+ var lines=['SKWS / Skywalkers · Server 1858','Allianzbericht für '+weekLabel(wk),'',
+ 'Mitglieder: '+roster,'T1 gemeldet: '+t1,'Gesamte gemeldete T1-Kampfkraft: '+nums(total,2)+' Mio.',''];
+ [['VS-Punkte','vs_points'],['Spenden','donations'],['Sturmpunkte','storm_score'],['Kills','kills'],['Zugpunkte','train_points']].forEach(function(c){
+  var info=totals(c[1],wk);lines.push(c[0]+': '+(info.rows.length?nums(info.sum,2)+' · '+info.count+' meldende Spieler':'noch keine freigegebenen Werte'));
+ });
+ lines.push('','Datenbasis: nur bestätigte Meldungen aus dem unabhängigen SKWS Command Center.','https://matdan1987.github.io/skws-command-center-standalone/');
+ return lines.join('\n');
 }
 function render(type,members){if(CATS[type])return metricPage(type,members);if(type==='shields')return shieldsPage(members);if(type==='events')return eventsPage(members,false);if(type==='custom')return eventsPage(members,true);if(type==='seasons')return seasonsPage();if(type==='compare')return comparePage(members);return null;}
 async function send(event){
@@ -218,6 +233,7 @@ window.SKWS_MODULES={
  setError:function(err){READY=false;ERROR=err&&err.message||'Tracking nicht verfügbar';},
  render:render,
  dashboardAddon:dashboardAddon,
+ shareSummary:shareSummary,
  handleSubmit:send,
  status:function(){return {ready:READY,error:ERROR,counts:{metrics:DATA.metrics.length,shields:DATA.shields.length,events:DATA.events.length,seasons:DATA.seasons.length}}}
 };
