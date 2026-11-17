@@ -164,7 +164,7 @@ function metricPage(key,members){
  metricsCard('Aktive Melder',current.rows.length?String(current.count):'–','Spieler mit freigegebenen Werten','users')+
  metricsCard('Vorwoche',last.rows.length?compact(last.sum):'–','Woche '+weekLabel(prev),'clock')+
  metricsCard('Entwicklung',last.rows.length&&current.rows.length?change:'–','Ohne Meldungen keine belastbare Quote','activity')+'</div>'+(key==='vs'?vsStrategyPanel(wk):'')+panel+
- '<section class="panel table-panel"><div class="table-panel-header"><div><h2>Spieler-Rangliste</h2><small>'+escape(weekLabel(wk))+'</small></div></div>'+metricTable(cfg.metric,members,wk)+'</section>'+
+ '<section class="panel table-panel"><div class="table-panel-header"><div><h2>Spieler-Rangliste</h2><small>'+escape(key==='vs'?prettyDate(wk)+' – '+prettyDate(addDays(wk,5)):weekLabel(wk))+'</small></div></div>'+metricTable(cfg.metric,members,wk)+'</section>'+
  '<div style="height:22px"></div>'+metricReportForm(cfg,members);
 }
 function shieldStatus(s){
@@ -249,25 +249,26 @@ function comparePage(members){
  '<section class="panel table-panel"><div class="table-panel-header"><div><h2>Vierwochen-Tabelle</h2><small>Alle Zahlen basieren ausschließlich auf freigegebenen Meldungen</small></div></div><div class="table-scroll"><table><thead><tr><th>Kategorie</th>'+weeks.map(function(w){return '<th>'+escape(prettyDate(w))+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div></section>';
 }
 function dashboardAddon(members){
- var wk=currentWeek(),vs=totals('vs_points',wk),don=totals('donations',wk),storm=totals('storm_score',wk),kill=totals('kills',wk);
+ var wk=currentWeek(),vs=totals('vs_points',wk),don=totals('donations',wk),storm=totals('storm_score',wk),kill=totals('kills',wk),strategy=vsConfig(wk),ecoCount=0;
+ if(strategy&&strategy.mode==='eco')ecoCount=vs.rows.filter(function(r){return Number(r.metric_value)>Number(strategy.daily_target_points);}).length;
  var cols=[{label:'VS-Duelle diese Woche',view:'vs',metric:'vs_points',data:vs,icon:'swords'},
  {label:'Spenden diese Woche',view:'donations',metric:'donations',data:don,icon:'chart'},
  {label:'Sturm-Events',view:'storms',metric:'storm_score',data:storm,icon:'activity'}];
  var cards=cols.map(function(c){return '<section class="mod-summary-card"><div class="mod-card-title">'+ico(c.icon)+'<strong>'+escape(c.label)+'</strong><button class="micro-link" data-view="'+c.view+'">Alle anzeigen '+ico('arrow')+'</button></div>'+
  (c.data.rows.length?'<div class="mod-summary-value">'+escape(compact(c.data.sum))+'</div><div class="mod-summary-sub">'+c.data.count+' Spieler mit bestätigten Werten</div>':
  noRecords('Noch keine Trackingdaten','Neue Meldungen erscheinen nach Prüfung.'))+
- '<div class="mod-summary-footer"><span>'+escape(weekLabel(wk))+'</span></div></section>';}).join('');
+ '<div class="mod-summary-footer"><span>'+escape(weekLabel(wk))+'</span>'+(c.metric==='vs_points'&&strategy?'<div class="vs-dashboard-note">VS-Strategie: '+escape(vsModeName(strategy.mode))+(strategy.mode==='eco'?' · '+ecoCount+' Tageswerte über Eco-Ziel':'')+'</div>':'')+'</div></section>';}).join('');
  var leaders=[
   {name:'VS-Punkte',data:metricRows('vs_points',members,wk)},
   {name:'Spenden',data:metricRows('donations',members,wk)},
   {name:'Sturmpunkte',data:metricRows('storm_score',members,wk)}
  ];
- var ranked=leaders.find(function(c){return c.data.length>0;});
+ var ranked=(strategy&&strategy.mode==='eco'?leaders.find(function(c){return c.name==='Spenden'&&c.data.length>0;}):null)||leaders.find(function(c){return c.data.length>0;});
  var first=ranked?ranked.data[0]:null;
  return '<section class="mod-section-header"><div><h2>Allianz-Aktivität</h2><p>Die Bereiche aus dem Operations-Dashboard, mit echten Daten statt Demo-Statistiken</p></div>'+btn('Alle Vergleiche','compare')+'</section>'+
  '<div class="mod-summary-grid">'+cards+'</div>'+
  '<div class="mod-secondary"><div class="mod-secondary-title">'+ico('trophy')+' Wochenleistung</div>'+
- (first?'<div class="mod-secondary-member"><strong>'+escape(first.display)+'</strong><span>Beste Meldung in '+escape(ranked.name)+' · '+escape(compact(first.value))+'</span></div>':
+ (first?'<div class="mod-secondary-member"><strong>'+escape(first.display)+'</strong><span>'+(strategy&&strategy.mode==='eco'&&ranked.name==='VS-Punkte'?'Höchster VS-Wert (Eco-Regel prüfen)':'Beste Meldung in '+escape(ranked.name))+' · '+escape(compact(first.value))+'</span></div>':
  '<span>Für eine Wochenrangliste fehlen noch freigegebene Aktivitätswerte.</span>')+
  '<button class="micro-link" data-view="kills">'+ico('trophy')+' Kill-Tracker '+(kill.rows.length?escape(compact(kill.sum)):'ohne Meldungen')+'</button></div>';
 }
