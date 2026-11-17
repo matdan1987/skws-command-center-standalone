@@ -148,7 +148,7 @@ function classifyPlayer(m,week,rules,reference){
  score=includedWeight?Math.round(available.reduce(function(s,x){return s+x.value*x.weight;},0)/includedWeight):null;
  // Vergleichbar erst nach ausreichenden abgeschlossenen Tagen in mindestens einem Regelbereich.
  var confirmedActivityCount=available.filter(function(c){return c.kind!=='Kampfkraft';}).length;
- var established=confirmedActivityCount>=2&&(finalVS.length>=Number(rules.min_final_vs_days)||finalDonations.length>=Number(rules.min_final_donation_days));
+ var established=confirmedActivityCount>=2&&(finalVS.length>=Number(rules.min_final_vs_days)||finalDonations.length>=Number(rules.min_final_donation_days))&&(week!==thisWeek()||Number(rules.weight_power||0)===0||powerForIndex!==null);
  var provisionalVS=vs.length?avg(vs,calcVS):null,provisionalDonation=donations.length?avg(donations,calcDonation):null,
  previews=[{w:Number(rules.weight_vs),v:provisionalVS},{w:Number(rules.weight_donations),v:provisionalDonation},{w:Number(rules.weight_power||0),v:powerForIndex}].filter(function(x){return x.v!==null&&x.w>0;}),
  previewWeight=previews.reduce(function(s,x){return s+x.w;},0),
@@ -278,7 +278,7 @@ function impactPage(members){
  impactTable(rows,week)+'</section>'+
  block('Die Startwerte von 5.000 Spendenpunkten, mindestens drei abschließenden Wertungstagen und die Gewichtung sind anpassbare Allianz-Vorschläge, keine Spielregeln. '+
  'Fehlende Wüstensturm-Teilnahme zählt nur dann als negativ, wenn ein bestätigtes Fernbleiben eines Stammspielers dokumentiert wurde. '+
- 'Ein Ersatzspieler ohne Einsatz bleibt neutral. Die aktuelle gemeldete T1-Kampfkraft zählt nur für die laufende Woche im Index, da historische Kampfkraft-Stände bislang nicht archiviert werden. T2 bis T4 sind Zusatzinformationen. Ein fehlender T1-Wert ist keine Null und ein starker T1-Wert beweist keine Aktivität. VS-Eco-Überschüsse sind Strategieabweichungen, kein nachgewiesener Ressourcenverbrauch.');
+ 'Ein Ersatzspieler ohne Einsatz bleibt neutral. Die aktuelle gemeldete T1-Kampfkraft zählt nur für die laufende Woche im Index, da historische Kampfkraft-Stände bislang nicht archiviert werden. T2 bis T4 sind Zusatzinformationen. Ein fehlender T1-Wert ist keine Null und ein starker T1-Wert beweist keine Aktivität. In der laufenden Woche bleibt eine endgültige Highlight-/Lowlight-Einstufung bei fehlender T1-Meldung offen. VS-Eco-Überschüsse sind Strategieabweichungen, kein nachgewiesener Ressourcenverbrauch.');
 }
 MOD.render=function(type,members){
  if(type==='storms')return stormPage(members||[]);
