@@ -146,7 +146,7 @@ SET min_daily_donations=5000,
 WHERE id=1;
 \`\`\`
 
-Summe der vier Gewichte muss 100 sein. Ein fehlender T1-Meldewert wird **nicht mit null** bewertet. Der Wert allein zählt nicht als Aktivitätsnachweis. Eine Änderung wirkt sich auf die aktuelle Anzeige aus, ohne die Originalmeldungen zu verändern. Die Gesamtstatistik ist **keine automatische Strafe**, sondern ein transparentes Instrument für Mentoren und R4/R5.
+Summe der vier Gewichte muss 100 sein. Ein fehlender T1-Meldewert wird **nicht mit null** bewertet. Der Wert allein zählt nicht als Aktivitätsnachweis. Wenn in der laufenden Woche die T1-Meldung fehlt, bleibt die endgültige Highlight-/Lowlight-Einordnung ausgesetzt, statt einen ohne Kampfkraftdaten künstlich erhöhten Index zu vergeben. Eine Änderung wirkt sich auf die aktuelle Anzeige aus, ohne die Originalmeldungen zu verändern. Die Gesamtstatistik ist **keine automatische Strafe**, sondern ein transparentes Instrument für Mentoren und R4/R5.
 
 
 ## Schildmeldungen
