@@ -170,8 +170,23 @@ function adminView(){
  '<section class="panel"><div class="panel-heading"><div><h2>Wie die Freigabe funktioniert</h2><div class="description">Vier klare Schutzmechanismen</div></div></div>'+
  '<div class="hint-steps"><div class="hint-step"><span class="step-number">1</span>Neue Meldungen erscheinen zunächst nur in einer geschützten Datenbanktabelle.</div><div class="hint-step"><span class="step-number">2</span>Öffentliche Besucher dürfen keine bereits bestätigten Werte überschreiben.</div><div class="hint-step"><span class="step-number">3</span>Die Freigabefunktion ist nicht über den öffentlichen Website-Schlüssel ausführbar.</div><div class="hint-step"><span class="step-number">4</span>Nach manueller Freigabe zeigt der Dashboard-Refresh die neuen Werte.</div></div>'+
  '<div class="divider"></div><h2>Offen für später</h2><p class="muted">Ein echter Admin-Login und eine komfortable Freigabeoberfläche kommen erst nach einer gesicherten Authentifizierung. Die öffentliche Website zeigt keine privaten Prüfeinträge.</p>'+
- '<div class="actions-row"><a class="btn btn-ghost" href="https://github.com/matdan1987/skws-command-center-standalone/blob/main/ADMIN.md" target="_blank" rel="noopener noreferrer">'+ico('external')+'Admin-Anleitung</a></div></section></div>';
+ '<div class="actions-row"><a class="btn btn-ghost" href="https://github.com/matdan1987/skws-command-center-standalone/blob/main/ADMIN.md" target="_blank" rel="noopener noreferrer">'+ico('external')+'Admin-Anleitung</a></div></section></div>'+adminTracking();
 }
+
+function adminTracking(){
+ var categories=[
+  {name:'VS · Spenden · Stürme · Kills · Zug',type:'metric',table:'cc_metric_reports',columns:'id,member_name,metric,metric_value,recorded_on,submitted_at',review:'cc_review_metric'},
+  {name:'Schildmeldungen',type:'shield',table:'cc_shield_reports',columns:'id,member_name,shield_status,expires_at,submitted_at',review:'cc_review_shield'},
+  {name:'Neue Eventvorschläge',type:'event',table:'cc_event_proposals',columns:'id,requester_name,title,category,starts_at,submitted_at',review:'cc_review_event'}
+ ];
+ return '<div class="mod-section-header" style="margin-top:24px"><div><h2>Weitere Freigaben</h2><p>Tracking- und Eventmeldungen werden im separaten Supabase-Projekt moderiert</p></div><a class="btn btn-ghost" href="https://github.com/matdan1987/skws-command-center-standalone/blob/main/ADMIN-TRACKING.md" target="_blank" rel="noopener noreferrer">'+ico('external')+'Anleitung</a></div><div class="mod-admin-grid">'+categories.map(function(c){
+ var select='SELECT '+c.columns+' FROM public.'+c.table+' WHERE status = '+"'pending'"+' ORDER BY submitted_at;';
+ var yes='SELECT public.'+c.review+"('UUID-DER-MELDUNG', true);";
+ var no='SELECT public.'+c.review+"('UUID-DER-MELDUNG', false);";
+ return '<section class="mod-panel"><div class="panel-heading"><div><h2>'+esc(c.name)+'</h2><div class="description">Freigegebene Meldungen werden öffentlich sichtbar</div></div></div><div class="mod-admin-label">PENDING MELDUNGEN</div><pre class="code-panel">'+esc(select)+'</pre><div class="actions-row"><button class="btn btn-ghost" data-sql-copy="'+esc(select)+'">'+ico('copy')+'Abfrage kopieren</button></div><div class="divider"></div><div class="mod-admin-label">FREIGEBEN / ABLEHNEN</div><pre class="code-panel">'+esc(yes)+'</pre><pre class="code-panel" style="margin-top:8px">'+esc(no)+'</pre><div class="actions-row"><button class="btn btn-ghost" data-sql-copy="'+esc(yes)+'">'+ico('copy')+'Freigabe</button><button class="btn btn-ghost" data-sql-copy="'+esc(no)+'">'+ico('copy')+'Ablehnung</button></div></section>';
+ }).join('')+'</div>';
+}
+
 function systemView(){
  var online=state.source==='online',s=stats();
  var rows=[
@@ -264,6 +279,7 @@ async function copyText(t){try{await navigator.clipboard.writeText(t);toast('SQL
 document.addEventListener('click',function(e){
  if(e.target.closest('#mobileMenu')){openMobile();return;}
  if(e.target.closest('#mobileShade')){closeMobile();return;}
+ var sqlButton=e.target.closest('[data-sql-copy]');if(sqlButton){copyText(sqlButton.dataset.sqlCopy);return;}
  var nav=e.target.closest('[data-view]');if(nav){if(nav.dataset.view==='entry')state.selectedName='';navigate(nav.dataset.view);return;}
  var edit=e.target.closest('[data-edit]');if(edit){state.selectedName=edit.dataset.edit;navigate('entry');return;}
  var button=e.target.closest('[data-action]');if(!button)return;
