@@ -139,7 +139,8 @@ function classifyPlayer(m,week,rules){
  if(zeroDon)issues.push(zeroDon+' Spenden-Nullwert'+(zeroDon===1?'':'e'));
  var confirmedMiss=validStorm.filter(function(x){return x.slot==='starter'&&x.attendance==='absent';}).length;
  if(confirmedMiss)issues.push(confirmedMiss+' bestätigte Wüstensturm-Fehlteilnahme'+(confirmedMiss===1?'':'n'));
- var positive=trend!==null&&trend>=85&&!surplus&&!lowDonations&&!zeroVS&&!zeroDon;
+ var chestReached=vs.some(function(r){return Number(r.metric_value)>=vsGoal;}),donationReached=donations.some(function(r){return Number(r.metric_value)>=donationMin;});
+ var positive=trend!==null&&trend>=85&&chestReached&&donationReached&&!surplus&&!lowDonations&&!zeroVS&&!zeroDon;
  var status=established?(score>=Number(rules.highlight_score)?'Highlight':score<=Number(rules.lowlight_score)?'Lowlight':'Im Rahmen'):
     (vs.length||donations.length||stormEntries.length?'Noch vorläufig':'Keine Meldung');
  var teamNames=stormEntries.map(function(r){var match=ownMatches.find(function(x){return x.id===r.match_id;});return match?match.team:null;}).filter(Boolean);
@@ -227,7 +228,7 @@ function impactPage(members){
  rules.min_final_vs_days+' abgeschlossene VS-Tage oder '+rules.min_final_donation_days+' abgeschlossene Spendentage erforderlich. '+
  'Fehlende Daten werden nie stillschweigend als Null gewertet. Der Wüstensturm zählt nur bei bestätigter Teilnahme oder bestätigtem Fehlen eines Stammspielers in einem abgeschlossenen Gefecht.')+
  '<div class="ops-analysis-grid"><section class="panel">'+panelHeading('Highlights','Vorläufig positive Tendenzen; endgültige Highlights erst bei belastbarer Datenlage')+
- impactHighlights(rows,true)+impactHighlights(rows,false)+'</section>'+
+ '<div class="ops-list-subhead">Positive Zwischenstände</div>'+impactHighlights(rows,true)+'<div class="ops-list-subhead">Bestätigte Highlights</div>'+impactHighlights(rows,false)+'</section>'+
  '<section class="panel">'+panelHeading('Lowlights','Nur tatsächlich bestätigte schwache Gesamtleistung')+
  impactLowlights(rows)+'</section></div>'+
  '<section class="panel ops-observation-panel">'+panelHeading('Beobachtungsliste','Eco-Überschüsse, Spendentage unter dem Vorschlagsminimum und tatsächlich gemeldete Nullwerte, noch keine Schuldzuweisung')+
