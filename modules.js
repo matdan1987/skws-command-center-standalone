@@ -237,7 +237,7 @@ function seasonsPage(){
 }
 function comparePage(members){
  var weeks=[currentWeek(),previousWeek(),addDays(currentWeek(),-14),addDays(currentWeek(),-21)];
- var columns=[['VS-Punkte','vs_points'],['Spenden','donations'],['Sturm-Punkte','storm_score'],['Kills','kills'],['Zugpunkte','train_points']];
+ var columns=[['VS-Punkte','vs_points'],['Spenden','donations'],['Kills','kills'],['Zugpunkte','train_points']];
  var any=DATA.metrics.length>0;
  var rows=columns.map(function(c){var sums=weeks.map(function(w){return totals(c[1],w);});return '<tr><td><b>'+escape(c[0])+'</b></td>'+sums.map(function(v){return '<td class="num">'+(v.rows.length?escape(compact(v.sum)):'–')+'</td>';}).join('')+'</tr>';}).join('');
  var bars=columns.map(function(c){var cur=totals(c[1],weeks[0]),prev=totals(c[1],weeks[1]),max=Math.max(cur.sum,prev.sum,1);return '<div class="mod-compare-row"><strong>'+escape(c[0])+'</strong><div class="mod-compare-values"><span>'+ico('chart')+' Diese Woche '+(cur.rows.length?escape(compact(cur.sum)):'–')+'</span><span>Vorwoche '+(prev.rows.length?escape(compact(prev.sum)):'–')+'</span></div><div class="mod-two-bars"><div style="width:'+Math.round(cur.sum/max*100)+'%"></div><div style="width:'+Math.round(prev.sum/max*100)+'%"></div></div></div>';}).join('');
@@ -251,17 +251,18 @@ function comparePage(members){
 function dashboardAddon(members){
  var wk=currentWeek(),vs=totals('vs_points',wk),don=totals('donations',wk),storm=totals('storm_score',wk),kill=totals('kills',wk),strategy=vsConfig(wk),ecoCount=0;
  if(strategy&&strategy.mode==='eco')ecoCount=vs.rows.filter(function(r){return Number(r.metric_value)>Number(strategy.daily_target_points);}).length;
+ var stormMatches=Array.isArray(DATA.stormMatches)?DATA.stormMatches.filter(function(m){return m.event_date>=wk&&m.event_date<=addDays(wk,6);}):[];
  var cols=[{label:'VS-Duelle diese Woche',view:'vs',metric:'vs_points',data:vs,icon:'swords'},
  {label:'Spenden diese Woche',view:'donations',metric:'donations',data:don,icon:'chart'},
- {label:'Sturm-Events',view:'storms',metric:'storm_score',data:storm,icon:'activity'}];
+ {label:'Wüstensturm A/B',view:'storms',metric:'storm_matches',data:{rows:stormMatches,count:stormMatches.length,sum:stormMatches.length},icon:'activity'}];
  var cards=cols.map(function(c){return '<section class="mod-summary-card"><div class="mod-card-title">'+ico(c.icon)+'<strong>'+escape(c.label)+'</strong><button class="micro-link" data-view="'+c.view+'">Alle anzeigen '+ico('arrow')+'</button></div>'+
- (c.data.rows.length?'<div class="mod-summary-value">'+escape(compact(c.data.sum))+'</div><div class="mod-summary-sub">'+c.data.count+' Spieler mit bestätigten Werten</div>':
- noRecords('Noch keine Trackingdaten','Neue Meldungen erscheinen nach Prüfung.'))+
+ (c.data.rows.length?'<div class="mod-summary-value">'+escape(compact(c.data.sum))+'</div><div class="mod-summary-sub">'+(c.metric==='storm_matches'?'Getrennte Team-A- und Team-B-Einsätze':'Spieler mit erfassten Werten: '+c.data.count)+'</div>':
+ noRecords(c.metric==='storm_matches'?'Noch keine Wüstensturm-Einsätze':'Noch keine Trackingdaten',c.metric==='storm_matches'?'Team-A- und Team-B-Ergebnisse werden getrennt verwaltet.':'Neue Meldungen erscheinen nach Prüfung.'))+
  '<div class="mod-summary-footer"><span>'+escape(weekLabel(wk))+'</span>'+(c.metric==='vs_points'&&strategy?'<div class="vs-dashboard-note">VS-Strategie: '+escape(vsModeName(strategy.mode))+(strategy.mode==='eco'?' · '+ecoCount+' Tageswerte über Eco-Ziel':'')+'</div>':'')+'</div></section>';}).join('');
  var leaders=[
   {name:'VS-Punkte',data:metricRows('vs_points',members,wk)},
   {name:'Spenden',data:metricRows('donations',members,wk)},
-  {name:'Sturmpunkte',data:metricRows('storm_score',members,wk)}
+  {name:'Zugpunkte',data:metricRows('train_points',members,wk)}
  ];
  var ranked=(strategy&&strategy.mode==='eco'?leaders.find(function(c){return c.name==='Spenden'&&c.data.length>0;}):null)||leaders.find(function(c){return c.data.length>0;});
  var first=ranked?ranked.data[0]:null;
@@ -277,7 +278,7 @@ function shareSummary(members){
  var total=members.reduce(function(n,m){return n+(m.squads&&m.squads[0]?Number(m.squads[0].power||0):0);},0);
  var lines=['SKWS / Skywalkers · Server 1858','Allianzbericht für '+weekLabel(wk),'',
  'Mitglieder: '+roster,'T1 gemeldet: '+t1,'Gesamte gemeldete T1-Kampfkraft: '+nums(total,2)+' Mio.',''];
- [['VS-Punkte','vs_points'],['Spenden','donations'],['Sturmpunkte','storm_score'],['Kills','kills'],['Zugpunkte','train_points']].forEach(function(c){
+ [['VS-Punkte','vs_points'],['Spenden','donations'],['Kills','kills'],['Zugpunkte','train_points']].forEach(function(c){
   var info=totals(c[1],wk);lines.push(c[0]+': '+(info.rows.length?nums(info.sum,2)+' · '+info.count+' meldende Spieler':'noch keine freigegebenen Werte'));
  });
  lines.push('','Datenbasis: nur bestätigte Meldungen aus dem unabhängigen SKWS Command Center.','https://matdan1987.github.io/skws-command-center-standalone/');
