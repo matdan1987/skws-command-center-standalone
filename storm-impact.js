@@ -175,6 +175,19 @@ function impactObservations(rows){
  if(!list.length)return block('Aktuell keine offenen Auffälligkeiten in den erfassten Zwischenständen.');
  return '<div class="ops-focus-list">'+list.map(function(x){return '<div class="ops-focus-item"><div><strong>'+esc(x.member.display)+'</strong><small>'+esc(x.issues.join(' · '))+'</small></div>'+pill('review','Prüfen')+'</div>';}).join('')+'</div>';
 }
+function impactDoubleZero(rows){
+ var list=rows.filter(function(r){
+  return r.vs.length>0&&r.don.length>0&&
+   r.vs.every(function(v){return Number(v.metric_value)===0;})&&
+   r.don.every(function(v){return Number(v.metric_value)===0;});
+ });
+ if(!list.length)return block('Keine gleichzeitig gemeldeten VS- und Spenden-Nullwerte in dieser Woche.');
+ return '<div class="ops-focus-list">'+list.map(function(r){
+  return '<div class="ops-focus-item"><div><strong>'+esc(r.member.display)+'</strong><small>'+
+   r.vs.length+' VS-Tageswert'+(r.vs.length===1?'':'e')+' und '+r.don.length+' Spendentag'+(r.don.length===1?'':'e')+
+   ' jeweils mit 0 gemeldet</small></div>'+pill('review','Nullwerte prüfen')+'</div>';
+ }).join('')+'</div>';
+}
 function impactTable(rows,week){
  var filtered=rows.filter(function(r){
  if(IMPACT_FILTER==='highlights'&&!(r.established&&r.status==='Highlight'||r.positive))return false;
@@ -233,6 +246,8 @@ function impactPage(members){
  impactLowlights(rows)+'</section></div>'+
  '<section class="panel ops-observation-panel">'+panelHeading('Beobachtungsliste','Eco-Überschüsse, Spendentage unter dem Vorschlagsminimum und tatsächlich gemeldete Nullwerte, noch keine Schuldzuweisung')+
  impactObservations(rows)+'</section>'+
+ '<section class="panel ops-observation-panel">'+panelHeading('Gemeldete Nullwerte in beiden Kategorien','Explizite Nullmeldungen in VS und Spenden. Ohne finales Ergebnis noch keine endgültige Inaktivitätsbewertung.')+
+ impactDoubleZero(rows)+'</section>'+
  '<section class="panel table-panel ops-activity-table"><div class="table-panel-header"><div><h2>Alle Allianzmitglieder</h2><small>Index nur bei ausreichender Datenlage, sonst unverbindlicher Trend</small></div>'+
  '<div class="ops-table-actions"><label>FILTER <select id="impactFilter">'+
  [['all','Alle'],['highlights','Highlights / positive Tendenzen'],['lowlights','Bestätigte Lowlights'],['observe','Prüfbedarf'],['missing','Ohne Meldung']].map(function(x){
