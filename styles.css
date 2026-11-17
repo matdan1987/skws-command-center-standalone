@@ -117,3 +117,62 @@
 @media(max-width:650px){.vs-week-picker{width:100%;justify-content:space-between}.vs-week-picker select{max-width:210px}.vs-strategy-panel{padding:16px 11px}.vs-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.vs-summary>div:nth-child(3){border-right:1px solid #304158}.vs-summary>div:nth-child(even){border-right:0}.vs-summary>div:nth-last-child(2){border-bottom:1px solid #304158}.vs-summary>div:last-child{border-bottom:0}.vs-summary strong{font-size:16px}.vs-day-theme{display:block;margin:4px 0 0}}
 
 .vs-dashboard-note{margin-top:8px;color:#ffb0b9;font-size:10px;font-weight:750;line-height:1.6}
+
+
+/* Wüstensturm & Gesamtstatistik */
+.ops-week-selector{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:.06em;font-weight:770;color:#9aafc3}
+.ops-week-selector select,.ops-table-actions select,.ops-table-actions input{border:1px solid #3c526a;background:#13263a;color:#e8f4f9;border-radius:8px;min-height:39px;padding:8px 11px;font-size:12px;max-width:230px}
+.ops-overview-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:linear-gradient(110deg,#172c36,#15273b);border:1px solid #315061;border-radius:10px;padding:15px 19px;margin:0 0 22px;color:#bcd8df;font-size:11px;font-weight:680;line-height:1.7}
+.ops-overview-strip span+span{border-left:1px solid #365265;padding-left:14px}
+.ops-team-grid,.ops-analysis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:22px;align-items:start}
+.ops-team-panel{min-width:0}
+.ops-team-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-bottom:15px;border-bottom:1px solid #31465c}
+.ops-team-head h2{margin:6px 0 0;font-size:22px;letter-spacing:-.03em}
+.ops-kicker{font-size:9px;font-weight:780;letter-spacing:.13em;color:#80b8ad}
+.ops-team-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-bottom:1px solid #304357}
+.ops-team-stats>div{display:flex;flex-direction:column;gap:5px;padding:15px 8px;text-align:center}
+.ops-team-stats strong{font-size:21px;color:#eaf9f4}
+.ops-team-stats span{font-size:10px;color:#9bb2c3}
+.ops-match{margin:18px 0 0;border:1px solid #2e4155;border-radius:9px;overflow:hidden}
+.ops-match-top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 13px}
+.ops-match-top strong{font-size:13px;display:block;overflow-wrap:anywhere}
+.ops-match-top small{display:block;margin-top:6px;font-size:10px;color:#829db2}
+.ops-match-result{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;background:#0f2032;color:#c0d6e3;font-size:11px;padding:12px;border-top:1px solid #2c4055}
+.ops-match>.muted{padding:10px 13px}
+.ops-roster{min-width:440px}
+.ops-roster td,.ops-roster th{padding:10px}
+.ops-info{margin:16px 0;border:1px solid #3c514d;background:linear-gradient(100deg,#1a292b,#12253b);color:#b2cdd0;padding:15px 17px;border-radius:10px;font-size:11px;line-height:1.75}
+.ops-info strong{color:#e0f4e9}
+.ops-team-panel>.ops-info{margin:17px 0 0}
+.ops-flag{display:inline-flex;white-space:nowrap;align-items:center;padding:4px 8px;border-radius:6px;border:1px solid #40546a;background:#24384a;color:#bdd3e3;font-size:10px;font-weight:720}
+.ops-good{color:#b2f4d4;border-color:#3c7462;background:#204738}
+.ops-review{color:#f9d5a1;border-color:#79633b;background:#463b28}
+.ops-warn{color:#ffc4c7;border-color:#855461;background:#4b303b}
+.ops-quiet{color:#b2c8d5;border-color:#3a536a;background:#203146}
+.ops-footer-actions{display:flex;gap:10px;margin:13px 0 20px}
+.ops-footer-actions a{font-size:11px;font-weight:680;color:#98e0c2;text-decoration:none}
+.ops-footer-actions a:hover{text-decoration:underline}
+.ops-kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;background:#132336;border:1px solid #2f475c;border-radius:10px;overflow:hidden;margin:0 0 20px}
+.ops-kpi-grid>div{display:flex;flex-direction:column;padding:18px;gap:12px;border-right:1px solid #2d4255}
+.ops-kpi-grid>div:last-child{border-right:0}
+.ops-kpi-grid small{color:#96afc1;font-size:10px;line-height:1.5}
+.ops-kpi-grid strong{font-size:23px;font-weight:830;color:#e7f3f7;letter-spacing:-.03em}
+.ops-analysis-grid .panel{min-height:185px}
+.ops-focus-list{display:grid;gap:0}
+.ops-focus-item{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #293d51;padding:12px 2px}
+.ops-focus-item strong{font-size:12px;display:block;overflow-wrap:anywhere}
+.ops-focus-item small{font-size:10px;line-height:1.55;color:#8fa7b8;display:block;margin-top:5px}
+.ops-observation-panel{margin:0 0 21px}
+.ops-activity-table{margin-bottom:18px}
+.ops-table-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:9px}
+.ops-table-actions label{display:flex;align-items:center;gap:6px;color:#8aa6b7;font-size:9px;font-weight:780}
+.ops-table-actions select{max-width:190px}
+.ops-table-actions input{width:160px}
+.ops-activity-table td{vertical-align:top;font-size:11px;line-height:1.55}
+.ops-impact-table{min-width:720px}
+.ops-impact-table .num{font-variant-numeric:tabular-nums}
+.ops-impact-table small{font-size:9px;color:#8ca8bd}
+.ops-row-detail{display:block;max-width:320px;white-space:normal;margin-top:6px}
+.ops-impact-table tr[hidden]{display:none}
+@media(max-width:1150px){.ops-team-grid,.ops-analysis-grid{grid-template-columns:1fr}.ops-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ops-kpi-grid>div:nth-child(3){border-right:0}.ops-kpi-grid>div:nth-child(-n+3){border-bottom:1px solid #2d4255}}
+@media(max-width:700px){.ops-week-selector{width:100%;justify-content:space-between}.ops-overview-strip span+span{border-left:0;padding-left:0}.ops-team-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-team-stats>div{border-bottom:1px solid #304357}.ops-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-kpi-grid>div:nth-child(3){border-right:1px solid #2d4255}.ops-kpi-grid>div:nth-child(2n){border-right:0}.ops-kpi-grid>div:nth-child(-n+4){border-bottom:1px solid #2d4255}.ops-kpi-grid strong{font-size:18px}.ops-analysis-grid .panel{padding:16px}.ops-table-actions{justify-content:flex-start;width:100%}.ops-table-actions input{flex:1;min-width:135px}.ops-activity-table .table-panel-header{align-items:flex-start;flex-wrap:wrap}}
