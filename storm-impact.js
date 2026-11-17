@@ -141,7 +141,7 @@ function classifyPlayer(m,week,rules){
  if(confirmedMiss)issues.push(confirmedMiss+' bestätigte Wüstensturm-Fehlteilnahme'+(confirmedMiss===1?'':'n'));
  var chestReached=vs.some(function(r){return Number(r.metric_value)>=vsGoal;}),donationReached=donations.some(function(r){return Number(r.metric_value)>=donationMin;});
  var positive=trend!==null&&trend>=85&&chestReached&&donationReached&&!surplus&&!lowDonations&&!zeroVS&&!zeroDon;
- var status=established?(score>=Number(rules.highlight_score)?'Highlight':score<=Number(rules.lowlight_score)?'Lowlight':'Im Rahmen'):
+ var status=established?(score<=Number(rules.lowlight_score)?'Lowlight':surplus>0?'Eco-Abweichung':score>=Number(rules.highlight_score)?'Highlight':'Im Rahmen'):
     (vs.length||donations.length||stormEntries.length?'Noch vorläufig':'Keine Meldung');
  var teamNames=stormEntries.map(function(r){var match=ownMatches.find(function(x){return x.id===r.match_id;});return match?match.team:null;}).filter(Boolean);
  return {member:m,vs:vs,don:donations,finalVS:finalVS,finalDon:finalDonations,storm:stormEntries,
