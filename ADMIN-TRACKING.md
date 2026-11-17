@@ -57,6 +57,95 @@ Erlaubt sind `eco`, `eco_plus` und `all_in`. Immer das **Montagsdatum** als `wee
 
 Hinweis: 7,2 Millionen sind die allgemeine Schwelle für die neunte Tagestruhe, wenn die nötigen VS-Forschungen freigeschaltet sind. Neue Sonderbelohnungen (z. B. Infinite Roulette, je nach Serververfügbarkeit) und Punktgewinne ohne Ressourceneinsatz können den tatsächlichen Nutzen des Überschusses verändern. Deshalb ist die Kennzeichnung eine **bewusst festgelegte Allianzregel**, kein automatischer Nachweis für Verschwendung.
 
+
+## Wüstensturm: getrennte Teams A und B
+
+Die bisherige unspezifische Kategorie storm_score wurde aus der öffentlichen Punktmeldung entfernt und ist **kein Ersatz** für echte Wüstensturm-Einsätze. Die getrennten Tabellen im unabhängigen SKWS-Supabase-Projekt sind:
+
+- public.cc_desert_storm_matches: eine Begegnung pro Team A/B und Eventdatum, mit Gegner, eigener Startzeit, Ergebnis und Teampunkten
+- public.cc_desert_storm_roster: tatsächliche Spieleraufstellungen und Ersatzbank je Begegnung, jeweils mit Teilnahme und individuellen Wüstensturm-Punkten
+- public.cc_activity_rules: administrativ einstellbare Anforderungen und Gewichte der Gesamtstatistik
+
+Die Daten sind öffentlich nur lesbar; nur der privilegierte Datenbankadministrator kann sie schreiben. Das System stellt **keine** Spielsynchronisation oder Mitgliedsverifikation bereit.
+
+### Wüstensturm-Begegnung anlegen
+
+Team A und Team B separat erfassen. Bei der Uhrzeit den tatsächlichen Server-Zeitzonenoffset angeben, wenn bekannt:
+
+\`\`\`sql
+INSERT INTO public.cc_desert_storm_matches (event_date,team,starts_at,opponent,result,notes)
+VALUES ('2026-11-20','A',NULL,'','pending','')
+ON CONFLICT(event_date,team) DO NOTHING;
+\`\`\`
+
+Für B den Teamcode B verwenden. Bei unbekanntem Termin oder Gegner NULL bzw. leer lassen, keine Uhrzeit erfinden. Wenn das Match stattgefunden hat:
+
+\`\`\`sql
+UPDATE public.cc_desert_storm_matches
+SET result='win', own_points=12345, enemy_points=10000, updated_at=now()
+WHERE event_date='2026-11-20' AND team='A';
+\`\`\`
+
+**Zahlen oben sind ausschließlich technische Beispieldaten**, keine Spielergebnisse; unbedingt mit den tatsächlich dokumentierten Werten ersetzen.
+
+### Stammspieler, Ersatz, Anwesenheit
+
+\`\`\`sql
+INSERT INTO public.cc_desert_storm_roster (match_id,member_name,slot,attendance)
+SELECT id,'SPIELERNAME','starter','unknown'
+FROM public.cc_desert_storm_matches
+WHERE event_date='2026-11-20' AND team='A'
+ON CONFLICT(match_id,member_name) DO NOTHING;
+\`\`\`
+
+Slot = starter (max. 20) oder substitute (max. 10). Das Datenbank-Trigger prüft die Plätze und verhindert, dass ein Spieler am gleichen Tag Team A und B gleichzeitig belegt. Eine reine Aufstellung beweist noch keine Anwesenheit. Anwesenheit separat prüfen: unknown, present, absent oder not_called. Nicht eingewechselte Ersatzspieler müssen not_called heißen und werden **nicht** als Fehlteilnahme bewertet. Ein bestätigtes Fernbleiben wird nur bei Stammspielern negativ berücksichtigt.
+
+Punkte nach geprüftem Gefecht eintragen:
+
+\`\`\`sql
+UPDATE public.cc_desert_storm_roster
+SET attendance='present', individual_points=10000, updated_at=now()
+WHERE member_name='SPIELERNAME' AND match_id=(
+ SELECT id FROM public.cc_desert_storm_matches
+ WHERE event_date='2026-11-20' AND team='A'
+);
+\`\`\`
+
+Auch hier sind Werte nur Platzhalter; eine unbekannte Punktzahl bleibt NULL. 0 Punkte bedeutet **bekannt und bestätigt null**, nicht unbekannt.
+
+### Gesamtstatistik: Mindestanforderungen und Gewichtung
+
+Die neue Ansicht Gesamtstatistik berücksichtigt individuell dokumentierte VS-Tageswerte, Allianzspenden und echte Wüstensturm-Teilnahme. Für eine belastbare Highlight-/Lowlight-Einordnung sind Daten aus **mindestens zwei Bereichen** erforderlich und mindestens 3 abgeschlossene VS- oder Spendentage (einstellbar). Fehlende Meldungen sind **keine** Nullwerte. Nicht nominierte Spieler erhalten keinen Wüstensturm-Abzug.
+
+Startwerte, ausdrücklich **nicht von der Allianzleitung bestätigte Pflichten**:
+
+- VS: Tagesziel laut konfigurierter Eco-/Eco-Plus-/All-In-Woche, standardmäßig 7,2 Mio.
+- Spenden: 5.000 Punkte pro erfasstem Tag als veränderbarer Vorschlagswert
+- Wüstensturm: Teilnahme zählt mit; 10.000 individuelle Punkte sind eine anpassbare Vergleichsmarke **nur nach verifizierter Teilnahme**
+- Gewichtung: VS 50 %, Spenden 30 %, Wüstensturm 20 %; nur Kategorien mit tatsächlichen Daten werden in den Index eingerechnet
+- Highlights: Index ab 85, Lowlights: bis 55, **nur** bei ausreichender geprüfter Datengrundlage
+- Zwischenstände: nur unverbindliche Trends, Eco-Abweichungen und Prüfhinweise; keine endgültigen Lowlights
+
+Mindestanforderungen können nach interner SKWS-Entscheidung so geändert werden:
+
+\`\`\`sql
+UPDATE public.cc_activity_rules
+SET min_daily_donations=5000,
+    min_storm_individual_points=10000,
+    min_final_vs_days=3,
+    min_final_donation_days=3,
+    weight_vs=50,
+    weight_donations=30,
+    weight_storm=20,
+    highlight_score=85,
+    lowlight_score=55,
+    updated_at=now()
+WHERE id=1;
+\`\`\`
+
+Summe der drei Gewichte muss 100 sein. Eine Änderung wirkt sich auf die aktuelle Anzeige aus, ohne die Originalmeldungen zu verändern. Die Gesamtstatistik ist **keine automatische Strafe**, sondern ein transparentes Instrument für Mentoren und R4/R5.
+
+
 ## Schildmeldungen
 
 ```sql
